@@ -62,7 +62,7 @@ export const Chat: React.FC = () => {
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <div className="border-b dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-800 dark:text-white">ArcGPT🚀</h1>
+        <h1 className="text-xl font-bold text-gray-800 dark:text-white">CodeArc🚀</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={toggleDarkMode}
