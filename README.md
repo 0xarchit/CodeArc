@@ -1,5 +1,5 @@
 ## Programming centric chatbot that tell concepts like friends.
-> include features like local storage for history, custom api and delete chat
+> include features like local storage for history, custom api keys and delete chat with Mobile app as well as Website
 
 ---
 
@@ -10,3 +10,5 @@
 ## Chat window
 ![image](https://github.com/user-attachments/assets/8693c0eb-f22a-41fc-8acf-7943d8c7add7)
 
+### Download Now: https://github.com/0xarchit/codearc/releases
+### Web Version: https://codearc.pages.dev
