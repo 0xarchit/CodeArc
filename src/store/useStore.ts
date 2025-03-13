@@ -222,7 +222,7 @@ export const useStore = create<Store>((set, get) => {
           ...currentChat,
           title:
             currentChat.messages.length === 0
-              ? message.slice(0, 30)
+              ? message.slice(0, 20)
               : currentChat.title, // Set title based on first message
           messages: updatedMessages,
         };
