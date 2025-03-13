@@ -44,7 +44,7 @@ export const ApiKeyInput: React.FC = () => {
           <KeyRound className={`w-12 h-12 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
         </div>
         <h1 className={`text-2xl font-bold text-center mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-          Welcome to ArcGPT
+          Welcome to CodeArc
         </h1>
         <p className={`text-center mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           Enter your name and Gemini API key to get started.
@@ -70,6 +70,8 @@ export const ApiKeyInput: React.FC = () => {
           <p className={`mt-3 text-xs ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
             Note: Keep your API key secure and never share it publicly!
             Also clear chat history after some uses to avoid rate limits and context overload issues.
+            <br />
+            We never store your API key on our servers. It is only upto your device.
           </p>
         </div>
 
