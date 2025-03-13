@@ -13,6 +13,17 @@ CodeArc is a programming-focused chatbot designed to explain concepts and help y
 
 ---
 
+## 🔧 Tech Stack
+CodeArc is built using cutting-edge technologies to deliver a seamless and efficient experience:
+- **React**: For crafting an interactive and responsive user interface.
+- **TypeScript**: Ensuring type safety and a smoother development process.
+- **@google/generative-ai**: Integrating advanced AI-driven features.
+- **Capacitor**: Enabling hybrid app development for cross-platform functionality.
+- **Zustand**: Simplifying state management with a lightweight and intuitive approach.
+- **react-loading-indicators**: Adding polished loading visuals for an enhanced user experience.
+
+---
+
 ## 🔒 Privacy First
 Your chat history is stored locally on your device or browser, giving you complete control over your data.
 
@@ -32,4 +43,6 @@ Your chat history is stored locally on your device or browser, giving you comple
 - **Download the App**: [CodeArc Releases](https://github.com/0xarchit/codearc/releases)
 - **Try the Web Version**: [CodeArc Website](https://codearc.pages.dev)
 
+## Credits
+Thanks to https://react-loading-indicators.netlify.app for loader
 ---
