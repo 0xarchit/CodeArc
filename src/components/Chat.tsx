@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Send, AlertCircle, Sun, Moon, Copy, Check, Trash2 } from 'lucide-react';
+import { Send, AlertCircle, Sun, Moon, Copy, Check, Trash2, Download, PawPrint as Paw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
 import { useStore } from '../store/useStore';
@@ -7,9 +7,13 @@ import { useStore } from '../store/useStore';
 export const Chat: React.FC = () => {
   const [input, setInput] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { messages, sendMessage, isLoading, error, clearError, isDarkMode, toggleDarkMode, userName, clearAllData, clearChatHistory } = useStore();
+  const [displayedResponse, setDisplayedResponse] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const { messages, sendMessage, isLoading, error, clearError, isDarkMode, toggleDarkMode, userName, clearAllData, clearChatHistory, deleteMessage } = useStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -17,11 +21,49 @@ export const Chat: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
+  }, [messages, displayedResponse]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      
+      if (lastMessage.role === 'assistant' && !lastMessage.animated) {
+        setIsTyping(true);
+        let currentText = '';
+        const words = lastMessage.content.split(' ');
+        let currentIndex = 0;
+
+        const typeWord = () => {
+          if (currentIndex < words.length) {
+            currentText += (currentIndex > 0 ? ' ' : '') + words[currentIndex];
+            setDisplayedResponse(currentText);
+            currentIndex++;
+            typingTimeoutRef.current = setTimeout(typeWord, 50);
+          } else {
+            setIsTyping(false);
+            const updatedMessages = messages.map((msg, idx) => 
+              idx === messages.length - 1 ? { ...msg, animated: true } : msg
+            );
+            localStorage.setItem("arcGPT_messages", JSON.stringify(updatedMessages));
+          }
+        };
+
+        typeWord();
+
+        return () => {
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+        };
+      } else if (lastMessage.role === 'assistant') {
+        setDisplayedResponse(lastMessage.content);
+      }
+    }
   }, [messages]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (input.trim() && !isLoading) {
+    if (input.trim() && !isLoading && !isTyping) {
       const message = input.trim();
       setInput('');
       await sendMessage(message);
@@ -39,6 +81,28 @@ export const Chat: React.FC = () => {
     await navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleCopyMessage = async (message: string) => {
+    await navigator.clipboard.writeText(message);
+    setCopiedMessage(message);
+    setTimeout(() => setCopiedMessage(null), 2000);
+  };
+
+  const handleDownloadChat = () => {
+    const chatContent = messages.map(msg => 
+      `${msg.role.toUpperCase()}:\n${msg.content}\n\n`
+    ).join('---\n\n');
+    
+    const blob = new Blob([chatContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'chat-history.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleOpenDeleteModal = () => {
@@ -59,20 +123,48 @@ export const Chat: React.FC = () => {
     setIsDeleteModalOpen(false);
   };
 
+  const handleDeleteMessage = (index: number) => {
+    deleteMessage(index);
+  };
+
+  const getFirstName = (name: string) => {
+    return name.split(' ')[0];
+  };
+
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      <div className="border-b dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-800 dark:text-white">CodeArc🚀</h1>
+      <div className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'} p-4 flex justify-between items-center`}>
         <div className="flex items-center gap-2">
+          <Paw className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`} />
+          <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>CodeArc</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {messages.length > 0 && (
+            <button
+              onClick={handleDownloadChat}
+              className={`p-2 rounded-lg transition-colors ${
+                isDarkMode 
+                  ? 'hover:bg-gray-700 text-gray-200' 
+                  : 'hover:bg-gray-100 text-gray-600'
+              }`}
+              title="Download chat history"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+          )}
           <button
             onClick={toggleDarkMode}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkMode 
+                ? 'hover:bg-gray-700 text-gray-200' 
+                : 'hover:bg-gray-100 text-gray-600'
+            }`}
             title="Toggle dark mode"
           >
             {isDarkMode ? (
-              <Sun className="w-5 h-5 text-gray-200" />
+              <Sun className="w-5 h-5" />
             ) : (
-              <Moon className="w-5 h-5 text-gray-600" />
+              <Moon className="w-5 h-5" />
             )}
           </button>
           <button
@@ -88,11 +180,13 @@ export const Chat: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.length === 0 ? (
-            <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-              <h2 className="text-2xl font-bold mb-2">
-                Namaste {userName ? `${userName} Bhai` : 'Bhai'}! 🙏
+            <div className="text-center mt-8">
+              <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-400">
+                Namaste {userName ? `${getFirstName(userName)} Bhai` : 'Bhai'}! 🙏
               </h2>
-              <p>Koi bhi programming question pucho, main help kar dunga!</p>
+              <p className="text-gray-900 dark:text-gray-400">
+                Koi bhi programming question pucho, main help kar dunga!
+              </p>
             </div>
           ) : (
             messages.map((message, index) => (
@@ -103,7 +197,7 @@ export const Chat: React.FC = () => {
                 }`}
               >
                 <div
-                  className={`max-w-[90%] md:max-w-[70%] rounded-2xl p-4 ${
+                  className={`max-w-[90%] md:max-w-[70%] rounded-2xl p-4 relative ${
                     message.role === 'user'
                       ? 'bg-indigo-600 text-white'
                       : isDarkMode
@@ -111,113 +205,120 @@ export const Chat: React.FC = () => {
                       : 'bg-white text-gray-800 shadow-md'
                   }`}
                 >
-                  <ReactMarkdown
-                    className={`prose ${
-                      message.role === 'user'
-                        ? 'prose-invert'
-                        : isDarkMode
-                        ? 'prose-invert'
-                        : 'prose-slate'
-                    } max-w-none prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:leading-7 prose-pre:bg-transparent prose-pre:p-0 prose-pre:my-0 prose-code:before:content-none prose-code:after:content-none`}
-                    components={{
-                      code: ({ node, inline, className, children, ...props }) => {
-                        const match = /language-(\w+)/.exec(className || '');
-                        const code = String(children).replace(/\n$/, '');
-                        const hasNewlines = code.includes('\n');
-                        const isCodeBlock = !inline && (hasNewlines || match);
-                        
-                        return isCodeBlock ? (
-                          <div className="relative mt-4 mb-4">
-                            <div className="absolute right-2 top-2">
-                              <button
-                                onClick={() => handleCopyCode(code)}
-                                className={`p-1 rounded-md transition-colors ${
+                  <div className="relative">
+                    <ReactMarkdown
+                      className={`prose ${
+                        message.role === 'user'
+                          ? 'prose-invert'
+                          : isDarkMode
+                          ? 'prose-invert'
+                          : 'prose-slate'
+                      } max-w-none prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:leading-7 prose-pre:bg-transparent prose-pre:p-0 prose-pre:my-0 prose-code:before:content-none prose-code:after:content-none`}
+                      components={{
+                        code: ({ node, inline, className, children, ...props }) => {
+                          const match = /language-(\w+)/.exec(className || '');
+                          const code = String(children).replace(/\n$/, '');
+                          const hasNewlines = code.includes('\n');
+                          const isCodeBlock = !inline && (hasNewlines || match);
+                          
+                          return isCodeBlock ? (
+                            <div className="relative mt-4 mb-4">
+                              <div className="absolute right-2 top-2">
+                                <button
+                                  onClick={() => handleCopyCode(code)}
+                                  className={`p-1 rounded-md transition-colors ${
+                                    message.role === 'user'
+                                      ? 'bg-white/10 hover:bg-white/20 text-white'
+                                      : isDarkMode
+                                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                                  }`}
+                                  title="Copy code"
+                                >
+                                  {copiedCode === code ? (
+                                    <Check className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                              </div>
+                              <pre
+                                className={`${
                                   message.role === 'user'
-                                    ? 'bg-white/10 hover:bg-white/20 text-white'
+                                    ? 'bg-black/20 border border-white/10'
                                     : isDarkMode
-                                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                                }`}
-                                title="Copy code"
+                                    ? 'bg-gray-900 border border-gray-700'
+                                    : 'bg-gray-50 border border-gray-200'
+                                } rounded-lg p-4 min-h-[40px] overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent`}
                               >
-                                {copiedCode === code ? (
-                                  <Check className="w-3.5 h-3.5" />
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" />
-                                )}
-                              </button>
+                                <code
+                                  className={`${match?.[1] || ''} text-sm font-mono ${
+                                    message.role === 'user'
+                                      ? 'text-white'
+                                      : isDarkMode
+                                      ? 'text-gray-100'
+                                      : 'text-gray-800'
+                                  } whitespace-pre break-words block`}
+                                  {...props}
+                                >
+                                  {code}
+                                </code>
+                              </pre>
                             </div>
-                            <pre
+                          ) : (
+                            <code
                               className={`${
                                 message.role === 'user'
                                   ? 'bg-black/20 border border-white/10'
                                   : isDarkMode
-                                  ? 'bg-gray-900 border border-gray-700'
-                                  : 'bg-gray-50 border border-gray-200'
-                              } rounded-lg p-4 min-h-[40px] overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent`}
+                                  ? 'bg-gray-900 border border-gray-700 text-gray-100'
+                                  : 'bg-gray-50 border border-gray-200 text-gray-800'
+                              } rounded-md px-1.5 py-0.5 text-sm font-mono`}
+                              {...props}
                             >
-                              <code
-                                className={`${match?.[1] || ''} text-sm font-mono ${
-                                  message.role === 'user'
-                                    ? 'text-white'
-                                    : isDarkMode
-                                    ? 'text-gray-100'
-                                    : 'text-gray-800'
-                                } whitespace-pre break-words block`}
-                                {...props}
-                              >
-                                {code}
-                              </code>
-                            </pre>
-                          </div>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
+                      {message.role === 'assistant' && isTyping && index === messages.length - 1
+                        ? displayedResponse 
+                        : message.content}
+                    </ReactMarkdown>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <button
+                        onClick={() => handleCopyMessage(message.content)}
+                        className={`p-1.5 rounded-md transition-colors ${
+                          message.role === 'user'
+                            ? 'bg-white/10 hover:bg-white/20'
+                            : isDarkMode
+                            ? 'bg-gray-700 hover:bg-gray-600'
+                            : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
+                        title="Copy message"
+                      >
+                        {copiedMessage === message.content ? (
+                          <Check className="w-4 h-4" />
                         ) : (
-                          <code
-                            className={`${
-                              message.role === 'user'
-                                ? 'bg-black/20 border border-white/10'
-                                : isDarkMode
-                                ? 'bg-gray-900 border border-gray-700 text-gray-100'
-                                : 'bg-gray-50 border border-gray-200 text-gray-800'
-                            } rounded-md px-1.5 py-0.5 text-sm font-mono`}
-                            {...props}
-                          >
-                            {children}
-                          </code>
-                        );
-                      },
-                      blockquote: ({ children }) => (
-                        <blockquote
-                          className={`border-l-4 ${
-                            message.role === 'user'
-                              ? 'border-white/30 bg-indigo-700/30'
-                              : isDarkMode
-                              ? 'border-gray-600 bg-gray-700/30'
-                              : 'border-indigo-500 bg-indigo-50'
-                          } pl-4 py-2 my-4 italic rounded-r-lg`}
-                        >
-                          {children}
-                        </blockquote>
-                      ),
-                      p: ({ children }) => (
-                        <p className="mb-4 last:mb-0">{children}</p>
-                      ),
-                      ul: ({ children }) => (
-                        <ul className="list-disc pl-6 mb-4 last:mb-0 space-y-2">
-                          {children}
-                        </ul>
-                      ),
-                      ol: ({ children }) => (
-                        <ol className="list-decimal pl-6 mb-4 last:mb-0 space-y-2">
-                          {children}
-                        </ol>
-                      ),
-                      li: ({ children }) => (
-                        <li className="leading-relaxed">{children}</li>
-                      ),
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMessage(index)}
+                        className={`p-1.5 rounded-md transition-colors ${
+                          message.role === 'user'
+                            ? 'bg-white/10 hover:bg-white/20'
+                            : isDarkMode
+                            ? 'bg-gray-700 hover:bg-gray-600'
+                            : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
+                        title="Delete message"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))
@@ -258,8 +359,8 @@ export const Chat: React.FC = () => {
         </div>
       </div>
 
-      <div className={`border-t dark:border-gray-700 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      <div className={`border-t ${
+        isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
       } p-4 flex justify-center`}>
         <form
           onSubmit={handleSubmit}
@@ -275,12 +376,12 @@ export const Chat: React.FC = () => {
                 ? 'bg-gray-700 text-gray-100 placeholder-gray-400 border-gray-600'
                 : 'bg-gray-50 text-gray-800 placeholder-gray-500 border-gray-200'
             } border focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
-            disabled={isLoading}
+            disabled={isLoading || isTyping}
             maxRows={8}
           />
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isTyping || !input.trim()}
             className="bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex-shrink-0"
           >
             <Send className="w-5 h-5" />
