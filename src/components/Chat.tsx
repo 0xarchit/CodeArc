@@ -11,7 +11,23 @@ export const Chat: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [displayedResponse, setDisplayedResponse] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const { messages, sendMessage, isLoading, error, clearError, isDarkMode, toggleDarkMode, userName, clearAllData, clearChatHistory, deleteMessage } = useStore();
+  const [lastAnimatedMessageId, setLastAnimatedMessageId] = useState<string | null>(null);
+
+  const { 
+    messages, 
+    sendMessage, 
+    setMessages, // Added from store
+    isLoading, 
+    error, 
+    clearError, 
+    isDarkMode, 
+    toggleDarkMode, 
+    userName, 
+    clearAllData, 
+    clearChatHistory, 
+    deleteMessage 
+  } = useStore();
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -21,45 +37,57 @@ export const Chat: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, displayedResponse]);
+  }, [messages]);
 
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      
-      if (lastMessage.role === 'assistant' && !lastMessage.animated) {
-        setIsTyping(true);
-        let currentText = '';
-        const words = lastMessage.content.split(' ');
-        let currentIndex = 0;
-
-        const typeWord = () => {
-          if (currentIndex < words.length) {
-            currentText += (currentIndex > 0 ? ' ' : '') + words[currentIndex];
-            setDisplayedResponse(currentText);
-            currentIndex++;
-            typingTimeoutRef.current = setTimeout(typeWord, 50);
-          } else {
-            setIsTyping(false);
-            const updatedMessages = messages.map((msg, idx) => 
-              idx === messages.length - 1 ? { ...msg, animated: true } : msg
-            );
-            localStorage.setItem("arcGPT_messages", JSON.stringify(updatedMessages));
-          }
-        };
-
-        typeWord();
-
-        return () => {
-          if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-          }
-        };
-      } else if (lastMessage.role === 'assistant') {
-        setDisplayedResponse(lastMessage.content);
-      }
+    if (messages.length === 0) {
+      setDisplayedResponse('');
+      setIsTyping(false);
+      setLastAnimatedMessageId(null);
+      return;
     }
-  }, [messages]);
+
+    const lastMessage = messages[messages.length - 1];
+
+    if (
+      lastMessage.role === 'assistant' &&
+      !lastMessage.animated &&
+      lastAnimatedMessageId !== lastMessage.id &&
+      !isTyping
+    ) {
+      setIsTyping(true);
+      let currentText = '';
+      const words = lastMessage.content.split(' ');
+      let currentIndex = 0;
+
+      const typeWord = () => {
+        if (currentIndex < words.length) {
+          currentText += (currentIndex > 0 ? ' ' : '') + words[currentIndex];
+          setDisplayedResponse(currentText);
+          currentIndex++;
+          typingTimeoutRef.current = setTimeout(typeWord, 50);
+        } else {
+          setIsTyping(false);
+          setLastAnimatedMessageId(lastMessage.id);
+          const updatedMessages = messages.map((msg) =>
+            msg.id === lastMessage.id ? { ...msg, animated: true } : msg
+          );
+          setMessages(updatedMessages); // Use store's setMessages
+        }
+      };
+
+      typeWord();
+
+      return () => {
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+      };
+    } else {
+      setDisplayedResponse(lastMessage.content);
+      setIsTyping(false);
+    }
+  }, [messages, setMessages]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -116,15 +144,30 @@ export const Chat: React.FC = () => {
   const handleClearChatHistory = () => {
     clearChatHistory();
     setIsDeleteModalOpen(false);
+    setDisplayedResponse('');
+    setIsTyping(false);
+    setLastAnimatedMessageId(null);
   };
 
   const handleClearAllData = () => {
     clearAllData();
     setIsDeleteModalOpen(false);
+    setDisplayedResponse('');
+    setIsTyping(false);
+    setLastAnimatedMessageId(null);
   };
 
   const handleDeleteMessage = (index: number) => {
     deleteMessage(index);
+    setIsTyping(false);
+    if (messages.length > 1) {
+      const newLastMessage = messages[messages.length - 2];
+      setDisplayedResponse(newLastMessage.content);
+      setLastAnimatedMessageId(newLastMessage.id);
+    } else {
+      setDisplayedResponse('');
+      setLastAnimatedMessageId(null);
+    }
   };
 
   const getFirstName = (name: string) => {
@@ -158,7 +201,7 @@ export const Chat: React.FC = () => {
               isDarkMode 
                 ? 'hover:bg-gray-700 text-gray-200' 
                 : 'hover:bg-gray-100 text-gray-600'
-            }`}
+              }`}
             title="Toggle dark mode"
           >
             {isDarkMode ? (
@@ -191,7 +234,7 @@ export const Chat: React.FC = () => {
           ) : (
             messages.map((message, index) => (
               <div
-                key={index}
+                key={message.id}
                 className={`flex ${
                   message.role === 'user' ? 'justify-end' : 'justify-start'
                 }`}
@@ -389,7 +432,6 @@ export const Chat: React.FC = () => {
         </form>
       </div>
 
-      {/* Delete Data Modal */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className={`p-6 rounded-lg shadow-lg max-w-sm w-full ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>

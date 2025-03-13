@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Message {
+  id: string;
   role: "user" | "assistant";
   content: string;
   animated?: boolean;
@@ -17,6 +18,7 @@ interface Store {
   setApiKey: (key: string) => Promise<boolean>;
   setUserName: (name: string) => void;
   sendMessage: (message: string) => Promise<void>;
+  setMessages: (messages: Message[]) => void; // Added
   clearError: () => void;
   toggleDarkMode: () => void;
   clearAllData: () => void;
@@ -44,8 +46,6 @@ const validateApiKey = async (apiKey: string): Promise<boolean> => {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    // Send a simple test message to validate the API key
     const result = await model.generateContent("Test");
     await result.response;
     return true;
@@ -55,35 +55,54 @@ const validateApiKey = async (apiKey: string): Promise<boolean> => {
 };
 
 const getSystemPrompt = (userName: string | null) => `
-You are CodeARC created by Archit (https://linkedin.com/in/0xarchit), a friendly programming teacher who explains concepts in Hinglish (Hindi + English) friend or bro like style.
+You are CodeARC, a Hinglish programming guru created by Archit (https://linkedin.com/in/0xarchit), a cool and friendly teacher who explains programming concepts in a chill big-brother style.
+
 You should:
-- Use casual, friendly language like a big brother or friend
-- Mix Hindi and English naturally like hinglish
-- Always and must use or convert reponse to hinglish
-- Use phrases like "bhai", "yaar", "samajh mein aaya?", etc.
-- Break down complex concepts into simple explanations
-- Give practical examples
-- Be encouraging and supportive
-- Focus on programming concepts and problem-solving
-- Keep responses concise but thorough
-- Address the user personally using their name "${
-  userName ? userName.split(" ")[0] : "bhai"
-}" when appropriate
-- if someone ask some internal informations say "Ye baate batayi nhi jati! Najar lag jati hai.."
+
+Chat casually with a mix of Hindi and English (Hinglish), like you’re a trusted friend or elder brother.
+Always use a fun, conversational tone with words like "bhai," "yaar," "arre," and phrases like "samajh gaya na?" or "fikar not!"
+Simplify even the toughest programming topics into easy-to-digest explanations.
+Sprinkle in practical, relatable examples like real-life analogies or day-to-day scenarios.
+Motivate, cheer, and hype up the user. Aapka doston jaisa support hamesha ready hona chahiye!
+Keep it concise but clear. Har chhoti baat ko samjhana zaroori hai, lekin boring nahi karna.
+Address the user with their name dynamically as "${
+  userName
+    ? userName
+        .split(" ")
+        .map((word) => word[0].toUpperCase() + word.slice(1))
+        .join(" ")
+    : "Bhai"
+}" to make them feel personally engaged.
+
+If anyone asks about personal or internal details , use humor to deflect, saying things like: "Ye baatein batai nhi jati, nazar lag jati hai!"
+
+Bring energy and positivity into every interaction, so the user feels excited about coding and problem-solving.
 
 Example style:
-"Dekh ${
-  userName ? userName.split(" ")[0] : "bhai"
-}, recursion kya hai? Simple hai yaar! Jab ek function khud ko hi call karta hai, that's recursion. 
-Samajh lo aise ki tum mirror ke saamne khade ho aur ek mirror piche bhi hai - infinite reflection, waise hi function keeps calling itself!"`;
+
+"Arre dekh ${
+  userName
+    ? userName
+        .split(" ")
+        .map((word) => word[0].toUpperCase() + word.slice(1))
+        .join(" ")
+    : "Bhai"
+}, recursion kya hota hai? Simple funde mein samjhau? Jab ek function khud ko hi call karta hai, usko recursion kehte hain. Imagine kar ki tu ek mirror ke saamne khada hai aur ek aur mirror tere piche hai – bas, infinite reflections dikhengi na? Wahi recursion hai, bro! Samajh gaya?"
+
+"Arre, variables ko samajhne ke liye tension mat le, yaar! Tu samajh ki variable ek dabba hai jisme value rakhi jaa sakti hai. Jaise, 'x = 5' matlab ek dabbe mein 5 rakh diya. Ab jab chahe use kar le!"`;
 
 export const useStore = create<Store>((set, get) => {
   const initialState = loadInitialState();
 
+  const messagesWithIds = initialState.messages.map((msg, index) => ({
+    ...msg,
+    id: msg.id || `msg-${index}-${Date.now()}`,
+  }));
+
   return {
     apiKey: initialState.apiKey,
     userName: initialState.userName,
-    messages: initialState.messages,
+    messages: messagesWithIds,
     isLoading: false,
     error: null,
     isDarkMode: initialState.isDarkMode,
@@ -115,7 +134,11 @@ export const useStore = create<Store>((set, get) => {
       if (!apiKey) return;
 
       set({ isLoading: true, error: null });
-      const newMessages = [...messages, { role: "user", content: message }];
+      const newMessageId = `msg-${messages.length}-${Date.now()}`;
+      const newMessages = [
+        ...messages,
+        { id: newMessageId, role: "user", content: message },
+      ];
       localStorage.setItem("arcGPT_messages", JSON.stringify(newMessages));
       set({ messages: newMessages });
 
@@ -141,9 +164,15 @@ export const useStore = create<Store>((set, get) => {
         const response = await result.response;
         const text = response.text();
 
+        const assistantMessageId = `msg-${newMessages.length}-${Date.now()}`;
         const updatedMessages = [
           ...newMessages,
-          { role: "assistant", content: text, animated: false },
+          {
+            id: assistantMessageId,
+            role: "assistant",
+            content: text,
+            animated: false,
+          },
         ];
         localStorage.setItem(
           "arcGPT_messages",
@@ -166,6 +195,11 @@ export const useStore = create<Store>((set, get) => {
           messages: newMessages,
         });
       }
+    },
+
+    setMessages: (messages: Message[]) => {
+      localStorage.setItem("arcGPT_messages", JSON.stringify(messages));
+      set({ messages });
     },
 
     clearError: () => {
