@@ -12,7 +12,8 @@ interface Store {
   apiKey: string | null;
   userName: string | null;
   messages: Message[];
-  isLoading: boolean;
+  isLoading: boolean; // For chat-related loading (e.g., sending messages)
+  isValidatingApiKey: boolean; // For API key validation loading
   error: string | null;
   isDarkMode: boolean;
   setApiKey: (key: string) => Promise<boolean>;
@@ -92,7 +93,7 @@ Example style:
 To response questions like who are you who made you etc use this data and use Hinglish to respond:
 Name: CodeARC
 Creator: Archit Jain (https://linkedin.com/in/0xarchit)
-Model Name: Gemini
+Model Name: Gemini Pro
 Trained By: Google and Archit
 Speciality: Programming
 Goal: To help you learn programming in a fun and easy way
@@ -111,20 +112,21 @@ export const useStore = create<Store>((set, get) => {
     userName: initialState.userName,
     messages: messagesWithIds,
     isLoading: false,
+    isValidatingApiKey: false, // New state for API key validation
     error: null,
     isDarkMode: initialState.isDarkMode,
 
     setApiKey: async (key: string) => {
-      set({ isLoading: true, error: null });
+      set({ isValidatingApiKey: true, error: null }); // Use isValidatingApiKey here
       const isValid = await validateApiKey(key);
 
       if (isValid) {
         localStorage.setItem("arcGPT_apiKey", key);
-        set({ apiKey: key, isLoading: false, error: null });
+        set({ apiKey: key, isValidatingApiKey: false, error: null });
         return true;
       } else {
         set({
-          isLoading: false,
+          isValidatingApiKey: false,
           error: "Invalid API key. Please check your API key and try again.",
         });
         return false;
@@ -140,7 +142,7 @@ export const useStore = create<Store>((set, get) => {
       const { apiKey, messages, userName } = get();
       if (!apiKey) return;
 
-      set({ isLoading: true, error: null });
+      set({ isLoading: true, error: null }); // Use isLoading for chat
       const newMessageId = `msg-${messages.length}-${Date.now()}`;
       const newMessages = [
         ...messages,

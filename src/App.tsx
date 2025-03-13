@@ -4,18 +4,18 @@ import { Chat } from './components/Chat';
 import { useStore } from './store/useStore';
 
 function App() {
-  const { apiKey, userName, isLoading } = useStore(state => ({
+  const { apiKey, userName, isValidatingApiKey } = useStore(state => ({
     apiKey: state.apiKey,
     userName: state.userName,
-    isLoading: state.isLoading,
+    isValidatingApiKey: state.isValidatingApiKey, // Use the new state
   }));
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {isLoading ? (
-          <div className="fixed inset-0 flex items-center justify-center w-full h-full  bg-black">
-            <Atom color="#ffffff" size="large" text="Loading..." textColor="#ffffff" />
-          </div>
+      {isValidatingApiKey ? ( // Show Atom loader only during API key validation
+        <div className="fixed inset-0 flex items-center justify-center w-full h-full bg-black">
+          <Atom color="#ffffff" size="large" text="Loading..." textColor="#ffffff" />
+        </div>
       ) : !apiKey || !userName ? (
         <ApiKeyInput />
       ) : (
