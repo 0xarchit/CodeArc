@@ -182,7 +182,7 @@ export const Chat: React.FC = () => {
           {messages.length === 0 ? (
             <div className="text-center mt-8">
               <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-400">
-                Namaste {userName ? `${getFirstName(userName)} Bhai` : 'Bhai'}! 🙏
+                Namaste {userName ? `${getFirstName(userName).charAt(0).toUpperCase() + getFirstName(userName).slice(1).toLowerCase()} Bhai` : 'Bhai'}! 🙏
               </h2>
               <p className="text-gray-900 dark:text-gray-400">
                 Koi bhi programming question pucho, main help kar dunga!
