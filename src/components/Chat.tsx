@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Send, AlertCircle, Sun, Moon, Copy, Check, Trash2, Download, PawPrint as Paw, Square } from 'lucide-react';
+import { Send, AlertCircle, Sun, Moon, Copy, Check, Trash2, Download, Code, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
 import { useStore } from '../store/useStore';
@@ -194,7 +194,7 @@ export const Chat: React.FC = () => {
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <div className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'} p-4 flex justify-between items-center`}>
         <div className="flex items-center gap-2">
-          <Paw className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`} />
+          <Code className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`} />
           <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>CodeArc</h1>
         </div>
         <div className="flex items-center gap-2">
