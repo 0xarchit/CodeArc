@@ -4,7 +4,9 @@
 ---
 
 ## First screen
-![image](https://github.com/user-attachments/assets/b7eb1768-abe6-4e28-aede-2763fc4e1748)
+![image](https://github.com/user-attachments/assets/b8c696e5-ad78-417e-8f4a-03e1d4fb6e37)
+
 
 ## Chat window
-![image](https://github.com/user-attachments/assets/3b575bde-1f59-4f4a-9c0d-e59c21db7bff)
+![image](https://github.com/user-attachments/assets/8693c0eb-f22a-41fc-8acf-7943d8c7add7)
+
