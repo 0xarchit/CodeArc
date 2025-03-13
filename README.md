@@ -44,5 +44,5 @@ Your chat history is stored locally on your device or browser, giving you comple
 - **Try the Web Version**: [CodeArc Website](https://codearc.pages.dev)
 
 ## Credits
-Thanks to https://react-loading-indicators.netlify.app for loader
+- Thanks to https://react-loading-indicators.netlify.app for loader
 ---
