@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Send, AlertCircle, Sun, Moon, Copy, Check, Trash2, Download, PawPrint as Paw } from 'lucide-react';
+import { Send, AlertCircle, Sun, Moon, Copy, Check, Trash2, Download, PawPrint as Paw, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
 import { useStore } from '../store/useStore';
@@ -16,7 +16,7 @@ export const Chat: React.FC = () => {
   const { 
     messages, 
     sendMessage, 
-    setMessages, // Added from store
+    setMessages, 
     isLoading, 
     error, 
     clearError, 
@@ -38,6 +38,22 @@ export const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const stopTyping = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.role === 'assistant' && !lastMessage.animated) {
+      setDisplayedResponse(lastMessage.content);
+      setIsTyping(false);
+      setLastAnimatedMessageId(lastMessage.id);
+      const updatedMessages = messages.map((msg) =>
+        msg.id === lastMessage.id ? { ...msg, animated: true } : msg
+      );
+      setMessages(updatedMessages);
+    }
+  };
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -72,7 +88,7 @@ export const Chat: React.FC = () => {
           const updatedMessages = messages.map((msg) =>
             msg.id === lastMessage.id ? { ...msg, animated: true } : msg
           );
-          setMessages(updatedMessages); // Use store's setMessages
+          setMessages(updatedMessages);
         }
       };
 
@@ -377,8 +393,10 @@ export const Chat: React.FC = () => {
                     <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-                    Generating response...
+                  <span className={
+
+isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                    Thinking...
                   </span>
                 </div>
               </div>
@@ -422,13 +440,24 @@ export const Chat: React.FC = () => {
             disabled={isLoading || isTyping}
             maxRows={8}
           />
-          <button
-            type="submit"
-            disabled={isLoading || isTyping || !input.trim()}
-            className="bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex-shrink-0"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+          {isTyping ? (
+            <button
+              type="button"
+              onClick={stopTyping}
+              className="bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition-colors flex-shrink-0"
+              title="Stop typing"
+            >
+              <Square className="w-5 h-5" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex-shrink-0"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          )}
         </form>
       </div>
 

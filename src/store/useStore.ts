@@ -18,7 +18,7 @@ interface Store {
   setApiKey: (key: string) => Promise<boolean>;
   setUserName: (name: string) => void;
   sendMessage: (message: string) => Promise<void>;
-  setMessages: (messages: Message[]) => void; // Added
+  setMessages: (messages: Message[]) => void;
   clearError: () => void;
   toggleDarkMode: () => void;
   clearAllData: () => void;
