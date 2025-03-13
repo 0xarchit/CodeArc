@@ -69,6 +69,7 @@ export const ApiKeyInput: React.FC = () => {
           </ol>
           <p className={`mt-3 text-xs ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
             Note: Keep your API key secure and never share it publicly!
+            Also clear chat history after some uses to avoid rate limits and context overload issues.
           </p>
         </div>
 
