@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CodeArc</string>
+    <string name="title_activity_main">CodeArc</string>
+    <string name="package_name">com.zrxArchit.CodeArc</string>
+    <string name="custom_url_scheme">com.zrxArchit.CodeArc</string>
+</resources>

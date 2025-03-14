@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface DeleteModalProps {
   isDarkMode: boolean;
   onClearChatHistory: () => void;

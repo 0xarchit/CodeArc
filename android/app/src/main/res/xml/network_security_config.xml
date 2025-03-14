@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config>
+        <domain includeSubdomains="true">generativelanguage.googleapis.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+        <tls-config>
+            <tls-version>TLSv1.2</tls-version>
+            <tls-version>TLSv1.3</tls-version>
+        </tls-config>
+    </domain-config>
+</network-security-config>

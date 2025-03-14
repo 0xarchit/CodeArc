@@ -1,8 +1,8 @@
-import React from 'react';
 import { Copy, Check, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message } from '../../types';
+import { Clipboard } from '@capacitor/clipboard';
 
 interface ChatMessageProps {
   message: Message;
@@ -29,6 +29,16 @@ export function ChatMessage({
   onCopyMessage,
   onDeleteMessage,
 }: ChatMessageProps) {
+  const handleCopyCode = async (code: string) => {
+    await Clipboard.write({ string: code });
+    onCopyCode(code);
+  };
+
+  const handleCopyMessage = async (msg: string) => {
+    await Clipboard.write({ string: msg });
+    onCopyMessage(msg);
+  };
+
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div
@@ -80,26 +90,22 @@ export function ChatMessage({
               </tr>
             ),
             th: ({ children }) => (
-              <th className="px-4 py-2 text-left font-semibold">
-                {children}
-              </th>
+              <th className="px-4 py-2 text-left font-semibold">{children}</th>
             ),
             td: ({ children }) => (
-              <td className="px-4 py-2">
-                {children}
-              </td>
+              <td className="px-4 py-2">{children}</td>
             ),
             code: ({ node, inline, className, children, ...props }) => {
               const match = /language-(\w+)/.exec(className || '');
               const code = String(children).replace(/\n$/, '');
               const hasNewlines = code.includes('\n');
               const isCodeBlock = !inline && (hasNewlines || match);
-              
+
               return isCodeBlock ? (
                 <div className="relative mt-4 mb-4">
                   <div className="absolute right-2 top-2">
                     <button
-                      onClick={() => onCopyCode(code)}
+                      onClick={() => handleCopyCode(code)}
                       className={`p-1 rounded-md transition-colors ${
                         message.role === 'user'
                           ? 'bg-white/10 hover:bg-white/20 text-white'
@@ -109,11 +115,7 @@ export function ChatMessage({
                       }`}
                       title="Copy code"
                     >
-                      {copiedCode === code ? (
-                        <Check className="w-3.5 h-3.5" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
+                      {copiedCode === code ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                   <pre className={`${
@@ -122,10 +124,8 @@ export function ChatMessage({
                       : isDarkMode
                       ? 'bg-gray-900 border border-gray-700'
                       : 'bg-gray-50 border border-gray-200'
-                  } rounded-lg p-4`}>
-                    <code className={`${match?.[1] || ''} text-sm font-mono`}>
-                      {code}
-                    </code>
+                  } rounded-lg p-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent`}>
+                    <code className={`${match?.[1] || ''} text-sm font-mono`}>{code}</code>
                   </pre>
                 </div>
               ) : (
@@ -145,13 +145,11 @@ export function ChatMessage({
             },
           }}
         >
-          {message.role === 'assistant' && isTyping && isLastMessage
-            ? displayedResponse
-            : message.content}
+          {message.role === 'assistant' && isTyping && isLastMessage ? displayedResponse : message.content}
         </ReactMarkdown>
         <div className="flex justify-end gap-2 mt-4">
           <button
-            onClick={() => onCopyMessage(message.content)}
+            onClick={() => handleCopyMessage(message.content)}
             className={`p-1.5 rounded-md transition-colors ${
               message.role === 'user'
                 ? 'bg-white/10 hover:bg-white/20'
@@ -161,11 +159,7 @@ export function ChatMessage({
             }`}
             title="Copy message"
           >
-            {copiedMessage === message.content ? (
-              <Check className="w-4 h-4" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
+            {copiedMessage === message.content ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </button>
           <button
             onClick={onDeleteMessage}

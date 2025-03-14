@@ -23,8 +23,9 @@ export function ApiKeyInput() {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'} p-4`}>
-      <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-8 rounded-xl shadow-lg max-w-md w-full relative`}>
+    // Removed min-h-screen from outer div and added h-screen with overflow-y-auto
+    <div className={`h-screen overflow-y-auto flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'} p-4`}>
+      <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-8 rounded-xl shadow-lg max-w-md w-full relative min-h-[400px]`}>
         <button
           onClick={toggleDarkMode}
           className={`absolute top-4 right-4 p-2 rounded-lg transition-colors ${

@@ -1,7 +1,7 @@
-import React from 'react';
 import { Plus, X, Trash2 } from 'lucide-react';
 import { ChatSession } from '../../types';
 import { Promo } from '../promo/Promo';
+import { Capacitor } from '@capacitor/core';
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -53,18 +53,14 @@ export function ChatSidebar({
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
           {chats.map(chat => (
             <div
               key={chat.id}
               className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
                 chat.id === currentChatId
-                  ? isDarkMode
-                    ? 'bg-gray-700'
-                    : 'bg-gray-200'
-                  : isDarkMode
-                  ? 'hover:bg-gray-700'
-                  : 'hover:bg-gray-200'
+                  ? isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  : isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
               }`}
             >
               <span
@@ -82,7 +78,8 @@ export function ChatSidebar({
             </div>
           ))}
         </div>
-        <Promo isDarkMode={isDarkMode} />
+        {/* Only render Promo on web, not on native app */}
+        {!Capacitor.isNativePlatform() && <Promo isDarkMode={isDarkMode} />}
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Code, Download, Sun, Moon, Trash2, Menu } from 'lucide-react';
 
 interface ChatHeaderProps {
