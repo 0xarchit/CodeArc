@@ -32,6 +32,37 @@ export default {
             'code::after': {
               content: '""',
             },
+            table: {
+              width: '100%',
+              marginTop: '1.5em',
+              marginBottom: '1.5em',
+              lineHeight: '1.5',
+              borderCollapse: 'collapse',
+              '& th': {
+                fontWeight: '600',
+                textAlign: 'left',
+                paddingTop: '0.75rem',
+                paddingBottom: '0.75rem',
+                paddingLeft: '1rem',
+                paddingRight: '1rem',
+              },
+              '& td': {
+                paddingTop: '0.75rem',
+                paddingBottom: '0.75rem',
+                paddingLeft: '1rem',
+                paddingRight: '1rem',
+              },
+              '& tbody tr': {
+                borderBottomWidth: '1px',
+              },
+              '& tbody tr:last-child': {
+                borderBottomWidth: '0',
+              },
+              '& p': {
+                marginTop: '0',
+                marginBottom: '0',
+              },
+            },
           },
         },
       },

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Copy, Check, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Message } from '../../types';
 
 interface ChatMessageProps {
@@ -47,7 +48,47 @@ export function ChatMessage({
               ? 'prose-invert'
               : 'prose-slate'
           } max-w-none`}
+          remarkPlugins={[remarkGfm]}
           components={{
+            table: ({ children }) => (
+              <div className="overflow-x-auto my-4">
+                <table className={`w-full border-collapse ${
+                  message.role === 'user' || isDarkMode
+                    ? 'border-gray-700'
+                    : 'border-gray-200'
+                }`}>
+                  {children}
+                </table>
+              </div>
+            ),
+            thead: ({ children }) => (
+              <thead className={`${
+                message.role === 'user' || isDarkMode
+                  ? 'bg-gray-800/50'
+                  : 'bg-gray-50'
+              }`}>
+                {children}
+              </thead>
+            ),
+            tr: ({ children }) => (
+              <tr className={`border-b ${
+                message.role === 'user' || isDarkMode
+                  ? 'border-gray-700'
+                  : 'border-gray-200'
+              }`}>
+                {children}
+              </tr>
+            ),
+            th: ({ children }) => (
+              <th className="px-4 py-2 text-left font-semibold">
+                {children}
+              </th>
+            ),
+            td: ({ children }) => (
+              <td className="px-4 py-2">
+                {children}
+              </td>
+            ),
             code: ({ node, inline, className, children, ...props }) => {
               const match = /language-(\w+)/.exec(className || '');
               const code = String(children).replace(/\n$/, '');

@@ -1,4 +1,3 @@
-// Create a new file called Promo.tsx
 import React from 'react';
 import { Download } from 'lucide-react';
 
