@@ -43,6 +43,17 @@ Your chat history is stored locally on your device or browser, giving you comple
 - **Download the App**: [CodeArc Releases](https://github.com/0xarchit/codearc/releases)
 - **Try the Web Version**: [CodeArc Website](https://codearc.pages.dev)
 
+# Before Downloading
+## How to Get Your API Key
+
+1. **Visit** [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. **Sign in** with your Google account.
+3. **Click** on the **"Create API key"** button.
+4. **Copy** your new API key.
+
+> **Note**: Keep your API key secure and never share it publicly!
+
+
 ## Credits
 - Thanks to https://react-loading-indicators.netlify.app for loader
 ---
