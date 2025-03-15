@@ -2,10 +2,12 @@
 
 CodeArc is a programming-focused chatbot designed to explain concepts and help you learn, just like a knowledgeable friend. It offers an intuitive and feature-packed experience across both mobile and web platforms.
 
+### 🌟 **Love this project? Give it a star and show your support!** ⭐
+
 ---
 
 ## 🚀 Key Features
-- **Local Storage for History**: Access your previous chats directly on your device (browser for the web version) without relying on external servers.
+- **Local Storage for History and Context**: Access your previous chats directly on your device (browser for the web version) without relying on external servers.
 - **Custom API Keys**: Configure your own API keys for a personalized and secure experience.
 - **Cross-Platform Compatibility**: Available for both mobile apps and websites, ensuring you can code and learn on the go.
 - **Easy Chat Management**: Effortlessly delete chats whenever needed.
@@ -44,7 +46,7 @@ Your chat history is stored locally on your device or browser, giving you comple
 - **Try the Web Version**: [CodeArc Website](https://codearc.pages.dev)
 
 # Before Downloading
-## How to Get Your API Key
+### How to Get Your API Key?
 
 1. **Visit** [Google AI Studio](https://aistudio.google.com/app/apikey).
 2. **Sign in** with your Google account.
@@ -52,6 +54,7 @@ Your chat history is stored locally on your device or browser, giving you comple
 4. **Copy** your new API key.
 
 > **Note**: Keep your API key secure and never share it publicly!
+> This api key is upto you only we dont collect or store them
 
 
 ## Credits
