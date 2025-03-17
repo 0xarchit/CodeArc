@@ -186,10 +186,10 @@ export const useStore = create<Store>((set, get) => {
           },
         });
 
+        // Always send the system prompt with each message to ensure it's applied
+        const systemPromptText = getSystemPrompt(userName);
         const result = await chat.sendMessage(
-          newMessages.length === 1
-            ? `${getSystemPrompt(userName)}\n\nUser: ${message}`
-            : message
+          `${systemPromptText}\n\nUser: ${message}`
         );
         const response = await result.response;
         const text = response.text();
