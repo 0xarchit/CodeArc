@@ -56,6 +56,9 @@ Your chat history is stored locally on your device or browser, giving you comple
 > 📝 **Note**: Keep your API key secure and never share it publicly!
 > This api key is upto you only we dont collect or store them
 
+## 🚀 Upcoming Features
+
+- **Download Chat as PDF**: Soon, you'll be able to save your chat conversations as PDF files for easy sharing and offline access.
 
 ## ©️ Credits
 - Thanks to https://react-loading-indicators.netlify.app for loader
