@@ -62,21 +62,25 @@ export function ChatMessage({
           components={{
             table: ({ children }) => (
               <div className="overflow-x-auto my-4">
-                <table className={`w-full border-collapse ${
-                  message.role === 'user' || isDarkMode
-                    ? 'border-gray-700'
-                    : 'border-gray-200'
-                }`}>
+                <table
+                  className={`border-separate border border-spacing-0 w-full rounded-lg ${
+                    message.role === 'user' || isDarkMode
+                      ? 'border-gray-700'
+                      : 'border-gray-200'
+                  }`}
+                >
                   {children}
                 </table>
               </div>
             ),
             thead: ({ children }) => (
-              <thead className={`${
-                message.role === 'user' || isDarkMode
-                  ? 'bg-gray-800/50'
-                  : 'bg-gray-50'
-              }`}>
+              <thead
+                className={`${
+                  message.role === 'user' || isDarkMode
+                    ? 'bg-gray-700 text-white border-b border-gray-700'
+                    : 'bg-gray-200 text-gray-700 border-b border-gray-200'
+                }`}
+              >
                 {children}
               </thead>
             ),
@@ -90,10 +94,26 @@ export function ChatMessage({
               </tr>
             ),
             th: ({ children }) => (
-              <th className="px-4 py-2 text-left font-semibold">{children}</th>
+              <th
+                className={`px-4 py-2 text-left font-semibold border-r last:border-r-0 ${
+                  message.role === 'user' || isDarkMode
+                    ? 'border-gray-700'
+                    : 'border-gray-200'
+                }`}
+              >
+                {children}
+              </th>
             ),
             td: ({ children }) => (
-              <td className="px-4 py-2">{children}</td>
+              <td
+                className={`px-4 py-2 border-r last:border-r-0 ${
+                  message.role === 'user' || isDarkMode
+                    ? 'border-gray-700'
+                    : 'border-gray-200'
+                }`}
+              >
+                {children}
+              </td>
             ),
             code: (props: any) => {
               const { node, className, children, ...rest } = props;
