@@ -7,7 +7,7 @@ interface ChatSidebarProps {
   isOpen: boolean;
   isDarkMode: boolean;
   chats: ChatSession[];
-  currentChatId: string;
+  currentChatId: string | null;
   onNewChat: () => void;
   onSwitchChat: (chatId: string) => void;
   onDeleteChat: (chatId: string) => void;

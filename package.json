@@ -11,13 +11,17 @@
     "android": "npx cap sync && npx cap open android"
   },
   "dependencies": {
-    "@capacitor/android": "^6.2.0",
-    "@capacitor/clipboard": "^6.0.2",
-    "@capacitor/core": "^6.2.0",
-    "@capacitor/filesystem": "^6.0.3",
-    "@capacitor/keyboard": "^6.0.3",
-    "@capacitor/toast": "^6.0.3",
+    "@capacitor/android": "^7.1.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/cli": "^7.1.0",
+    "@capacitor/clipboard": "^7.0.0",
+    "@capacitor/core": "^7.1.0",
+    "@capacitor/filesystem": "^7.0.0",
+    "@capacitor/keyboard": "^7.0.0",
+    "@capacitor/network": "^7.0.0",
+    "@capacitor/toast": "^7.0.0",
     "@google/generative-ai": "^0.2.1",
+    "@ionic/react": "^8.5.0",
     "@tailwindcss/typography": "^0.5.10",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
@@ -30,7 +34,6 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.2.0",
     "@eslint/js": "^9.9.1",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",

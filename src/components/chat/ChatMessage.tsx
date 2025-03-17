@@ -57,7 +57,7 @@ export function ChatMessage({
               : isDarkMode
               ? 'prose-invert'
               : 'prose-slate'
-          } max-w-none`}
+          } max-w-none break-words`}
           remarkPlugins={[remarkGfm]}
           components={{
             table: ({ children }) => (
@@ -95,11 +95,13 @@ export function ChatMessage({
             td: ({ children }) => (
               <td className="px-4 py-2">{children}</td>
             ),
-            code: ({ node, inline, className, children, ...props }) => {
+            code: (props: any) => {
+              const { node, className, children, ...rest } = props;
               const match = /language-(\w+)/.exec(className || '');
               const code = String(children).replace(/\n$/, '');
               const hasNewlines = code.includes('\n');
-              const isCodeBlock = !inline && (hasNewlines || match);
+              const isInline = rest?.inline;
+              const isCodeBlock = !isInline && (hasNewlines || match);
 
               return isCodeBlock ? (
                 <div className="relative mt-4 mb-4">
@@ -125,7 +127,7 @@ export function ChatMessage({
                       ? 'bg-gray-900 border border-gray-700'
                       : 'bg-gray-50 border border-gray-200'
                   } rounded-lg p-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent`}>
-                    <code className={`${match?.[1] || ''} text-sm font-mono`}>{code}</code>
+                    <code className={`${match?.[1] || ''} text-sm font-mono whitespace-pre`}>{code}</code>
                   </pre>
                 </div>
               ) : (
@@ -136,7 +138,7 @@ export function ChatMessage({
                       : isDarkMode
                       ? 'bg-gray-900 border border-gray-700'
                       : 'bg-gray-50 border border-gray-200'
-                  } rounded-md px-1.5 py-0.5 text-sm font-mono`}
+                  } rounded-md px-1.5 py-0.5 text-sm font-mono break-all`}
                   {...props}
                 >
                   {children}

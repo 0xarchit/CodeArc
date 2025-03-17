@@ -70,7 +70,8 @@ export function ApiKeyInput() {
             <li>Copy your new API key</li>
           </ol>
           <p className={`mt-3 text-xs ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-            Note: Keep your API key secure and never share it publicly!
+            Note: Keep your API key secure and never share it publicly!<br />
+            We never store your API key on our servers. It is only upto your device.
           </p>
         </div>
 

@@ -32,7 +32,7 @@ export function ChatHeader({
           <Menu className="w-5 h-5" />
         </button>
         <Code className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`} />
-        <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{title}</h1>
+        <h1 className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>CodeArc | {title}</h1>
       </div>
       <div className="flex items-center gap-2">
         {hasMessages && (

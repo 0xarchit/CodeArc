@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
+  user-drag: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scrollbar-color: grey transparent;
+}
+
 /* Custom scrollbar styles */
 @layer utilities {
   .scrollbar-thin {

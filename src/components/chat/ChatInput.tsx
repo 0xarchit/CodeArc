@@ -11,7 +11,7 @@ interface ChatInputProps {
 
 export function ChatInput({ isDarkMode, isTyping, setIsTyping }: ChatInputProps) {
   const [input, setInput] = useState('');
-  const { sendMessage, isLoading } = useStore();
+  const { sendMessage, isLoading, markLastAssistantMessageAsAnimated } = useStore();
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -31,6 +31,8 @@ export function ChatInput({ isDarkMode, isTyping, setIsTyping }: ChatInputProps)
 
   const handleStopTyping = () => {
     setIsTyping(false);
+    // Mark the most recent assistant message as "animated"
+    markLastAssistantMessageAsAnimated();
   };
 
   return (

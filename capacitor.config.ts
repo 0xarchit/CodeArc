@@ -5,7 +5,6 @@ const config: CapacitorConfig = {
   appId: "com.zrxArchit.CodeArc",
   appName: "CodeArc",
   webDir: "dist",
-  bundledWebRuntime: false,
   plugins: {
     Keyboard: {
       resize: KeyboardResize.Body,

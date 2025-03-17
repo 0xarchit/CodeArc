@@ -13,7 +13,7 @@ export function Chat() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-
+  
   const {
     chats,
     currentChatId,
@@ -40,15 +40,35 @@ export function Chat() {
     scrollToBottom();
   }, [currentChat.messages]);
 
+  async function getUniqueFilename(baseName: string): Promise<string> {
+    let suffix = 0;
+    let newName = baseName;
+    while (true) {
+      try {
+        await Filesystem.stat({
+          path: `CodeArc/${newName}.txt`,
+          directory: Directory.Documents,
+        });
+        suffix++;
+        newName = baseName + `(${suffix})`;
+      } catch {
+        break;
+      }
+    }
+    return newName;
+  }
+
   const handleDownloadChat = async () => {
+    const filename = `${currentChat.title || 'Chat'}`;
     const chatContent = currentChat.messages
       .map(msg => `${msg.role.toUpperCase()}:\n${msg.content}\n\n`)
       .join('---\n\n');
 
     if (Capacitor.isNativePlatform()) {
       try {
+        const uniqueFilename = await getUniqueFilename(filename);
         await Filesystem.writeFile({
-          path: `CodeArc/${currentChat.title}.txt`,
+          path: `CodeArc/${uniqueFilename}.txt`,
           data: chatContent,
           directory: Directory.Documents,
           encoding: Encoding.UTF8,
@@ -64,7 +84,7 @@ export function Chat() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${currentChat.title}.txt`;
+      a.download = `${filename}.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -82,18 +102,29 @@ export function Chat() {
     setIsDeleteModalOpen(false);
   };
 
+  function handleContainerClick() {
+    if (isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
+  }
+
   return (
-    <div className={`fixed inset-0 flex ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <ChatSidebar
-        isOpen={isSidebarOpen}
-        isDarkMode={isDarkMode}
-        chats={chats}
-        currentChatId={currentChatId}
-        onNewChat={newChat}
-        onSwitchChat={switchChat}
-        onDeleteChat={deleteChat}
-        onToggleSidebar={() => setIsSidebarOpen(false)}
-      />
+    <div
+      className={`fixed inset-0 flex ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
+      onClick={handleContainerClick}
+    >
+      <div onClick={e => e.stopPropagation()}>
+        <ChatSidebar
+          isOpen={isSidebarOpen}
+          isDarkMode={isDarkMode}
+          chats={chats}
+          currentChatId={currentChatId}
+          onNewChat={newChat}
+          onSwitchChat={switchChat}
+          onDeleteChat={deleteChat}
+          onToggleSidebar={() => setIsSidebarOpen(false)}
+        />
+      </div>
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <ChatHeader
@@ -102,7 +133,7 @@ export function Chat() {
           hasMessages={currentChat.messages.length > 0}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           onToggleDarkMode={toggleDarkMode}
-          onDownloadChat={handleDownloadChat}
+          onDownloadChat={handleDownloadChat} // Direct download without modal
           onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
         />
 
