@@ -8,12 +8,21 @@ interface MessageListProps {
   messages: Message[];
   isDarkMode: boolean;
   userName: string | null;
+  userGender: 'male' | 'female';
   messagesEndRef: RefObject<HTMLDivElement>;
   isTyping: boolean;
   setIsTyping: (typing: boolean) => void;
 }
 
-export function MessageList({ messages, isDarkMode, userName, messagesEndRef, isTyping, setIsTyping }: MessageListProps) {
+export function MessageList({ 
+  messages, 
+  isDarkMode, 
+  userName, 
+  userGender,
+  messagesEndRef, 
+  isTyping, 
+  setIsTyping 
+}: MessageListProps) {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const [displayedResponse, setDisplayedResponse] = useState('');
@@ -79,6 +88,7 @@ export function MessageList({ messages, isDarkMode, userName, messagesEndRef, is
   };
 
   const getFirstName = (name: string) => name.split(' ')[0];
+  const siblingTerm = userGender === 'male' ? 'Bhai' : 'Bahen';
 
   return (
     <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
@@ -86,7 +96,9 @@ export function MessageList({ messages, isDarkMode, userName, messagesEndRef, is
         {messages.length === 0 ? (
           <div className="text-center mt-8">
             <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-400">
-              Namaste {userName ? `${getFirstName(userName).charAt(0).toUpperCase() + getFirstName(userName).slice(1).toLowerCase()} Bhai` : 'Bhai'}! 🙏
+              Namaste {userName 
+                ? `${getFirstName(userName).charAt(0).toUpperCase() + getFirstName(userName).slice(1).toLowerCase()} ${userGender === 'male' ? 'Bhai' : 'Bahen'}` 
+                : siblingTerm}! 🙏
             </h2>
             <p className="text-gray-900 dark:text-gray-400">
               Koi bhi programming question pucho, main help kar dunga!

@@ -20,6 +20,7 @@ export function Chat() {
     isDarkMode,
     toggleDarkMode,
     userName,
+    userGender,  // Add userGender to destructuring
     clearAllData,
     clearChatHistory,
     newChat,
@@ -141,6 +142,7 @@ export function Chat() {
           messages={currentChat.messages}
           isDarkMode={isDarkMode}
           userName={userName}
+          userGender={userGender}  // Add the userGender prop
           messagesEndRef={messagesEndRef}
           isTyping={isTyping}
           setIsTyping={setIsTyping}

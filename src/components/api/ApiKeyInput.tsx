@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { KeyRound, ExternalLink, AlertCircle, Sun, Moon } from 'lucide-react';
+import { KeyRound, ExternalLink, AlertCircle, Sun, Moon, Info } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 export function ApiKeyInput() {
   const [key, setKey] = useState('');
   const [name, setName] = useState('');
+  const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [showTooltip, setShowTooltip] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   
-  const { setApiKey, setUserName, error, clearError, isDarkMode, toggleDarkMode } = useStore();
+  const { setApiKey, setUserName, setUserGender, error, clearError, isDarkMode, toggleDarkMode } = useStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,13 +19,13 @@ export function ApiKeyInput() {
       const isValid = await setApiKey(key.trim());
       if (isValid) {
         setUserName(name.trim());
+        setUserGender(gender);
       }
       setIsValidating(false);
     }
   };
 
   return (
-    // Removed min-h-screen from outer div and added h-screen with overflow-y-auto
     <div className={`h-screen overflow-y-auto flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'} p-4`}>
       <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-8 rounded-xl shadow-lg max-w-md w-full relative min-h-[400px]`}>
         <button
@@ -89,6 +91,76 @@ export function ApiKeyInput() {
               }`}
               required
             />
+            
+            <div className="mb-4">
+              <p className={`text-sm mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Choose how you'd like to be addressed:
+              </p>
+              <div className="flex items-center gap-4 relative">
+                <label
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors cursor-pointer ${
+                    gender === 'male'
+                      ? isDarkMode
+                        ? 'bg-purple-900/30 border-purple-700 text-purple-300'
+                        : 'bg-purple-50 border-purple-300 text-purple-700'
+                      : isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    id="male"
+                    name="gender"
+                    value="male"
+                    checked={gender === 'male'}
+                    onChange={() => setGender('male')}
+                    className="sr-only"
+                  />
+                  <span>Bhai (Brother)</span>
+                </label>
+                
+                <label
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors cursor-pointer ${
+                    gender === 'female'
+                      ? isDarkMode
+                        ? 'bg-purple-900/30 border-purple-700 text-purple-300'
+                        : 'bg-purple-50 border-purple-300 text-purple-700'
+                      : isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    id="female"
+                    name="gender"
+                    value="female"
+                    checked={gender === 'female'}
+                    onChange={() => setGender('female')}
+                    className="sr-only"
+                  />
+                  <span>Bahen (Sister)</span>
+                </label>
+                
+                <button
+                  type="button"
+                  className={`absolute right-0 top-0 -mt-6 p-1 rounded-full ${isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                  onClick={() => setShowTooltip(!showTooltip)}
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              </div>
+              
+              {showTooltip && (
+                <div className={`mt-1 p-2 rounded-md text-xs ${
+                  isDarkMode ? 'bg-gray-700 text-gray-200' : 'bg-white text-gray-800 shadow-md border border-gray-200'
+                }`}>
+                  This is for personalizing the AI's tone. No data will be shared anywhere.
+                </div>
+              )}
+            </div>
+            
             <input
               type="password"
               value={key}
