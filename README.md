@@ -58,7 +58,9 @@ Your chat history is stored locally on your device or browser, giving you comple
 
 ## 🚀 Upcoming Features
 
-- **Download Chat as PDF**: Soon, you'll be able to save your chat conversations as PDF files for easy sharing and offline access.
+- [ ] **Download Chat as PDF**: Soon, you'll be able to save your chat conversations as PDF files for easy sharing and offline access.  
+- [ ] **Update Notification Fix**: Automatic update notifications in the app for a seamless user experience.
+
 
 ## ©️ Credits
 - Thanks to https://react-loading-indicators.netlify.app for loader
