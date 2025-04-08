@@ -48,15 +48,52 @@ export function MessageList({
     ) {
       setIsTyping(true);
       let currentText = '';
-      const words = lastMessage.content.split(' ');
+      const fullContent = lastMessage.content;
+      
+      const contentLength = fullContent.length;
+      const baseSpeed = 4;
+      const typingSpeed = Math.max(1, Math.min(6, baseSpeed * (1 + contentLength / 15000)));
+      
       let currentIndex = 0;
+      let lastScrollTime = Date.now();
 
-      const typeWord = () => {
-        if (currentIndex < words.length) {
-          currentText += (currentIndex > 0 ? ' ' : '') + words[currentIndex];
+      const typeChunk = () => {
+        if (currentIndex < fullContent.length) {
+          let chunkSize = Math.max(1, Math.round(typingSpeed));
+          const remainingText = fullContent.substring(currentIndex);
+          
+          if (remainingText.startsWith('```') || 
+              remainingText.startsWith('|') || 
+              remainingText.includes('```') ||
+              remainingText.includes('| --- |')) {
+            chunkSize = Math.max(3, chunkSize * 1.5);
+          }
+          
+          chunkSize = Math.min(chunkSize, fullContent.length - currentIndex);
+          
+          const nextChunk = fullContent.substring(currentIndex, currentIndex + chunkSize);
+          currentText += nextChunk;
+          currentIndex += chunkSize;
+          
           setDisplayedResponse(currentText);
-          currentIndex++;
-          typingTimeoutRef.current = setTimeout(typeWord, 50);
+          
+          let delay = 20;
+          const lastChar = currentText.charAt(currentText.length - 1);
+          if (['.', '!', '?'].includes(lastChar)) {
+            delay = 35;
+          } else if ([',', ';', ':'].includes(lastChar)) {
+            delay = 25;
+          } else if (lastChar === '\n') {
+            delay = 30;
+          }
+          
+          const currentTime = Date.now();
+          if (currentTime - lastScrollTime > 250 && messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            lastScrollTime = currentTime;
+          }
+          
+          typingTimeoutRef.current = setTimeout(typeChunk, delay);
         } else {
           setIsTyping(false);
           setLastAnimatedMessageId(lastMessage.id);
@@ -64,10 +101,16 @@ export function MessageList({
             msg.id === lastMessage.id ? { ...msg, animated: true } : msg
           );
           setMessages(updatedMessages);
+          
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
         }
       };
 
-      typeWord();
+      setTimeout(() => {
+        typeChunk();
+      }, 150);
 
       return () => {
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -75,7 +118,7 @@ export function MessageList({
     } else {
       setDisplayedResponse(lastMessage.content);
     }
-  }, [messages, setMessages, setIsTyping]);
+  }, [messages, setMessages, setIsTyping, messagesEndRef]);
 
   const handleCopyCode = (code: string) => {
     setCopiedCode(code);
