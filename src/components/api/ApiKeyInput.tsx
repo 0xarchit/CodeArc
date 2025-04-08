@@ -147,6 +147,8 @@ export function ApiKeyInput() {
                   type="button"
                   className={`absolute right-0 top-0 -mt-6 p-1 rounded-full ${isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}
                   onClick={() => setShowTooltip(!showTooltip)}
+                  title="Show additional information"
+                  aria-label="Toggle information tooltip"
                 >
                   <Info className="w-4 h-4" />
                 </button>

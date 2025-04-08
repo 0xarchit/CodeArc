@@ -63,7 +63,7 @@ export function ChatMessage({
             p: ({ children }) => (
               <p className="my-1 whitespace-pre-line">{children}</p>
             ),
-            ol: ({ children, ordered, ...props }) => (
+            ol: ({ children, ...props }) => (
               <ol className="list-decimal my-1 pl-4 space-y-0.5" {...props}>
                 {children}
               </ol>

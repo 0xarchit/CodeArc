@@ -27,15 +27,34 @@ export function MessageList({
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const [displayedResponse, setDisplayedResponse] = useState('');
   const [lastAnimatedMessageId, setLastAnimatedMessageId] = useState<string | null>(null);
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
 
   const { isLoading, error, clearError, setMessages, deleteMessage } = useStore();
   const typingTimeoutRef = React.useRef<NodeJS.Timeout>();
+  const scrollContainerRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Track user's scroll activity
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollHeight, scrollTop, clientHeight } = container;
+      // If user has scrolled up at least 60px from bottom, consider it as "user scrolled"
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 60;
+      setUserHasScrolled(!isAtBottom);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (messages.length === 0) {
       setDisplayedResponse('');
       setIsTyping(false);
       setLastAnimatedMessageId(null);
+      setUserHasScrolled(false);
       return;
     }
 
@@ -47,6 +66,9 @@ export function MessageList({
       !isTyping
     ) {
       setIsTyping(true);
+      // Reset user scroll state when a new message arrives
+      setUserHasScrolled(false);
+      
       let currentText = '';
       const fullContent = lastMessage.content;
       
@@ -88,7 +110,8 @@ export function MessageList({
           }
           
           const currentTime = Date.now();
-          if (currentTime - lastScrollTime > 250 && messagesEndRef.current) {
+          // Only scroll to bottom if user hasn't manually scrolled
+          if (currentTime - lastScrollTime > 250 && messagesEndRef.current && !userHasScrolled) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
             lastScrollTime = currentTime;
           }
@@ -102,7 +125,8 @@ export function MessageList({
           );
           setMessages(updatedMessages);
           
-          if (messagesEndRef.current) {
+          // Scroll to bottom when typing is complete only if user hasn't scrolled
+          if (messagesEndRef.current && !userHasScrolled) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
           }
         }
@@ -118,7 +142,14 @@ export function MessageList({
     } else {
       setDisplayedResponse(lastMessage.content);
     }
-  }, [messages, setMessages, setIsTyping, messagesEndRef]);
+  }, [messages, setMessages, setIsTyping, messagesEndRef, userHasScrolled]);
+
+  // Scroll to bottom when a new message is added (but not during typing)
+  useEffect(() => {
+    if (messages.length > 0 && !isTyping && messagesEndRef.current && !userHasScrolled) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length, isTyping, messagesEndRef, userHasScrolled]);
 
   const handleCopyCode = (code: string) => {
     setCopiedCode(code);
@@ -134,7 +165,10 @@ export function MessageList({
   const siblingTerm = userGender === 'male' ? 'Bhai' : 'Bahen';
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+    <div 
+      className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent"
+      ref={scrollContainerRef}
+    >
       <div className="max-w-4xl mx-auto">
         {messages.length === 0 ? (
           <div className="text-center mt-8">
@@ -173,10 +207,10 @@ export function MessageList({
             }`}>
               <div className="flex items-center space-x-3">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
+                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-0" />
+                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-150" />
+                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-300" />
+                  </div>
                 <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Thinking...</span>
               </div>
             </div>

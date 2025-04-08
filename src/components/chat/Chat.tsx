@@ -13,14 +13,15 @@ export function Chat() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
+
   const {
     chats,
     currentChatId,
     isDarkMode,
     toggleDarkMode,
     userName,
-    userGender,  // Add userGender to destructuring
+    userGender,
     clearAllData,
     clearChatHistory,
     newChat,
@@ -28,18 +29,39 @@ export function Chat() {
     deleteChat,
   } = useStore();
 
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentChat = chats.find(chat => chat.id === currentChatId) || { messages: [], title: "New Chat" };
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && !userHasScrolled) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [currentChat.messages]);
+    setUserHasScrolled(false);
+  }, [currentChatId]);
+
+  useEffect(() => {
+    if (!isTyping) {
+      scrollToBottom();
+    }
+  }, [currentChat.messages, isTyping]);
+
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollHeight, scrollTop, clientHeight } = container;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 60;
+      setUserHasScrolled(!isAtBottom);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   async function getUniqueFilename(baseName: string): Promise<string> {
     let suffix = 0;
@@ -127,14 +149,14 @@ export function Chat() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden" ref={chatContainerRef}>
         <ChatHeader
           title={currentChat.title}
           isDarkMode={isDarkMode}
           hasMessages={currentChat.messages.length > 0}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           onToggleDarkMode={toggleDarkMode}
-          onDownloadChat={handleDownloadChat} // Direct download without modal
+          onDownloadChat={handleDownloadChat}
           onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
         />
 
@@ -142,7 +164,7 @@ export function Chat() {
           messages={currentChat.messages}
           isDarkMode={isDarkMode}
           userName={userName}
-          userGender={userGender}  // Add the userGender prop
+          userGender={userGender}
           messagesEndRef={messagesEndRef}
           isTyping={isTyping}
           setIsTyping={setIsTyping}
