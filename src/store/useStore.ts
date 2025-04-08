@@ -184,7 +184,7 @@ export const useStore = create<Store>((set, get) => {
             parts: m.content,
           })),
           generationConfig: {
-            maxOutputTokens: 2000,
+            maxOutputTokens: 200000,
           },
         });
 
