@@ -1,4 +1,4 @@
-import React, { useState, useEffect, RefObject } from 'react';
+import { useState, useEffect, useRef, RefObject } from 'react';
 import { ChatMessage } from './ChatMessage';
 import { Message } from '../../types';
 import { useStore } from '../../store/useStore';
@@ -30,8 +30,14 @@ export function MessageList({
   const [userHasScrolled, setUserHasScrolled] = useState(false);
 
   const { isLoading, error, clearError, setMessages, deleteMessage } = useStore();
-  const typingTimeoutRef = React.useRef<NodeJS.Timeout>();
-  const scrollContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Track current isTyping value
+  const isTypingRef = useRef(isTyping);
+  useEffect(() => {
+    isTypingRef.current = isTyping;
+  }, [isTyping]);
 
   // Track user's scroll activity
   useEffect(() => {
@@ -40,7 +46,6 @@ export function MessageList({
 
     const handleScroll = () => {
       const { scrollHeight, scrollTop, clientHeight } = container;
-      // If user has scrolled up at least 60px from bottom, consider it as "user scrolled"
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 60;
       setUserHasScrolled(!isAtBottom);
     };
@@ -80,6 +85,18 @@ export function MessageList({
       let lastScrollTime = Date.now();
 
       const typeChunk = () => {
+        // Check for manual stop (via stop button)
+        if (!isTypingRef.current) {
+          setDisplayedResponse(fullContent);
+          setLastAnimatedMessageId(lastMessage.id);
+          const updatedMessages = messages.map((msg) =>
+            msg.id === lastMessage.id ? { ...msg, animated: true } : msg
+          );
+          setMessages(updatedMessages);
+          setIsTyping(false); // Ensure stop button reverts to send button
+          return;
+        }
+
         if (currentIndex < fullContent.length) {
           let chunkSize = Math.max(1, Math.round(typingSpeed));
           const remainingText = fullContent.substring(currentIndex);
@@ -109,15 +126,17 @@ export function MessageList({
             delay = 30;
           }
           
+          // Remove auto-scrolling during typing to allow free scrolling
+          // Only auto scroll at the very beginning when message first appears
           const currentTime = Date.now();
-          // Only scroll to bottom if user hasn't manually scrolled
-          if (currentTime - lastScrollTime > 250 && messagesEndRef.current && !userHasScrolled) {
+          if (currentTime - lastScrollTime > 250 && messagesEndRef.current && !userHasScrolled && currentIndex < chunkSize * 2) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
             lastScrollTime = currentTime;
           }
           
           typingTimeoutRef.current = setTimeout(typeChunk, delay);
         } else {
+          // Type complete: ensure stop button reverts to send button
           setIsTyping(false);
           setLastAnimatedMessageId(lastMessage.id);
           const updatedMessages = messages.map((msg) =>
@@ -125,7 +144,7 @@ export function MessageList({
           );
           setMessages(updatedMessages);
           
-          // Scroll to bottom when typing is complete only if user hasn't scrolled
+          // Scroll to bottom only once at completion if user hasn't manually scrolled
           if (messagesEndRef.current && !userHasScrolled) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
           }
@@ -140,11 +159,11 @@ export function MessageList({
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       };
     } else {
-      setDisplayedResponse(lastMessage.content);
+      setDisplayedResponse(lastMessage?.content || '');
     }
-  }, [messages, setMessages, setIsTyping, messagesEndRef, userHasScrolled]);
+  }, [messages, setMessages, setIsTyping, messagesEndRef]);
 
-  // Scroll to bottom when a new message is added (but not during typing)
+  // Scroll to bottom only when a new message is added or when typing is completed
   useEffect(() => {
     if (messages.length > 0 && !isTyping && messagesEndRef.current && !userHasScrolled) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });

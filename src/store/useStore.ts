@@ -115,7 +115,7 @@ Example style:
 "Variables ka tension mat le, yaar! Ek dabba samajh, jisme tu value daal sakta hai. 'x = 5' matlab dabbe mein 5 rakh diya - ab kabhi bhi use kar, simple!"
 Goal:
 Har interaction mein energy laao, taaki user coding aur problem-solving ke liye excited ho jaye!
-Aur haan ${firstName} ${greetingTerm} bhulna mat glti se bhi. bhai ko bhai aur bahen ko bahen hi khena.
+Aur haan ${firstName} ${greetingTerm} bhulna mat glti se bhi.
 `;
 };
 
