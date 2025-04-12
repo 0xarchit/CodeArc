@@ -29,13 +29,14 @@ interface Store {
 }
 
 const loadInitialState = () => {
-  const storedApiKey = localStorage.getItem("arcGPT_apiKey");
-  const storedUserName = localStorage.getItem("arcGPT_userName");
-  const storedUserGender = localStorage.getItem("arcGPT_userGender") as
+  const storedApiKey = localStorage.getItem("CodeARC_apiKey");
+  const storedUserName = localStorage.getItem("CodeARC_userName");
+  const storedUserGender = localStorage.getItem("CodeARC_userGender") as
     | "male"
     | "female";
-  const storedChats = localStorage.getItem("arcGPT_chats");
-  const storedDarkMode = localStorage.getItem("arcGPT_darkMode");
+  const storedChats = localStorage.getItem("CodeARC_chats");
+  const storedDarkMode = localStorage.getItem("CodeARC_darkMode");
+  const storedCurrentChatId = localStorage.getItem("CodeARC_currentChatId");
 
   const chats = storedChats
     ? JSON.parse(storedChats).map((chat: any) => ({
@@ -65,7 +66,13 @@ const loadInitialState = () => {
               createdAt: Date.now(),
             },
           ],
-    currentChatId: chats.length > 0 ? chats[0].id : `chat-${Date.now()}`,
+    currentChatId:
+      storedCurrentChatId &&
+      chats.some((chat: any) => chat.id === storedCurrentChatId)
+        ? storedCurrentChatId
+        : chats.length > 0
+        ? chats[0].id
+        : `chat-${Date.now()}`,
     isDarkMode: storedDarkMode
       ? JSON.parse(storedDarkMode)
       : window.matchMedia("(prefers-color-scheme: dark)").matches,
@@ -133,7 +140,7 @@ export const useStore = create<Store>((set, get) => {
       const isValid = await validateApiKey(key);
 
       if (isValid) {
-        localStorage.setItem("arcGPT_apiKey", key);
+        localStorage.setItem("CodeARC_apiKey", key);
         set({ apiKey: key, isValidatingApiKey: false, error: null });
         return true;
       } else {
@@ -146,12 +153,12 @@ export const useStore = create<Store>((set, get) => {
     },
 
     setUserName: (name: string) => {
-      localStorage.setItem("arcGPT_userName", name);
+      localStorage.setItem("CodeARC_userName", name);
       set({ userName: name });
     },
 
     setUserGender: (gender: "male" | "female") => {
-      localStorage.setItem("arcGPT_userGender", gender);
+      localStorage.setItem("CodeARC_userGender", gender);
       set({ userGender: gender });
     },
 
@@ -172,7 +179,7 @@ export const useStore = create<Store>((set, get) => {
       const updatedChats = chats.map((chat) =>
         chat.id === currentChatId ? updatedChat : chat
       );
-      localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+      localStorage.setItem("CodeARC_chats", JSON.stringify(updatedChats));
       set({ chats: updatedChats });
 
       try {
@@ -218,7 +225,7 @@ export const useStore = create<Store>((set, get) => {
         const finalChats = chats.map((chat) =>
           chat.id === currentChatId ? finalChat : chat
         );
-        localStorage.setItem("arcGPT_chats", JSON.stringify(finalChats));
+        localStorage.setItem("CodeARC_chats", JSON.stringify(finalChats));
         set({
           chats: finalChats,
           isLoading: false,
@@ -244,7 +251,7 @@ export const useStore = create<Store>((set, get) => {
       const updatedChats = chats.map((chat) =>
         chat.id === currentChatId ? { ...chat, messages } : chat
       );
-      localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+      localStorage.setItem("CodeARC_chats", JSON.stringify(updatedChats));
       set({ chats: updatedChats });
     },
 
@@ -253,17 +260,18 @@ export const useStore = create<Store>((set, get) => {
     toggleDarkMode: () => {
       set((state) => {
         const newDarkMode = !state.isDarkMode;
-        localStorage.setItem("arcGPT_darkMode", JSON.stringify(newDarkMode));
+        localStorage.setItem("CodeARC_darkMode", JSON.stringify(newDarkMode));
         return { isDarkMode: newDarkMode };
       });
     },
 
     clearAllData: () => {
-      localStorage.removeItem("arcGPT_apiKey");
-      localStorage.removeItem("arcGPT_userName");
-      localStorage.removeItem("arcGPT_userGender");
-      localStorage.removeItem("arcGPT_chats");
-      localStorage.removeItem("arcGPT_darkMode");
+      localStorage.removeItem("CodeARC_apiKey");
+      localStorage.removeItem("CodeARC_userName");
+      localStorage.removeItem("CodeARC_userGender");
+      localStorage.removeItem("CodeARC_chats");
+      localStorage.removeItem("CodeARC_darkMode");
+      localStorage.removeItem("CodeARC_currentChatId"); // remove saved chat id
       set({
         apiKey: null,
         userName: null,
@@ -283,7 +291,7 @@ export const useStore = create<Store>((set, get) => {
 
     clearChatHistory: () => {
       const { currentChatId } = get();
-      localStorage.removeItem("arcGPT_chats");
+      localStorage.removeItem("CodeARC_chats");
       set({
         chats: [
           {
@@ -305,7 +313,7 @@ export const useStore = create<Store>((set, get) => {
       const updatedChats = chats.map((chat) =>
         chat.id === currentChatId ? { ...chat, messages: newMessages } : chat
       );
-      localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+      localStorage.setItem("CodeARC_chats", JSON.stringify(updatedChats));
       set({ chats: updatedChats });
     },
 
@@ -319,11 +327,13 @@ export const useStore = create<Store>((set, get) => {
       };
       const { chats } = get();
       const updatedChats = [...chats, newChat];
-      localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+      localStorage.setItem("CodeARC_chats", JSON.stringify(updatedChats));
+      localStorage.setItem("CodeARC_currentChatId", newChatId); // save new chat id
       set({ chats: updatedChats, currentChatId: newChatId });
     },
 
     switchChat: (chatId: string) => {
+      localStorage.setItem("CodeARC_currentChatId", chatId); // update stored active chat
       set({ currentChatId: chatId });
     },
 
@@ -338,15 +348,18 @@ export const useStore = create<Store>((set, get) => {
           messages: [],
           createdAt: Date.now(),
         });
-        localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+        localStorage.setItem("CodeARC_chats", JSON.stringify(updatedChats));
+        localStorage.setItem("CodeARC_currentChatId", newChatId); // update stored active chat
         set({ chats: updatedChats, currentChatId: newChatId });
       } else {
-        localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
-        set({
-          chats: updatedChats,
-          currentChatId:
-            currentChatId === chatId ? updatedChats[0].id : currentChatId,
-        });
+        // Ensure currentChatId is a string by using fallback if null.
+        const newCurrentChatId =
+          !currentChatId || currentChatId === chatId
+            ? updatedChats[0].id
+            : currentChatId;
+        localStorage.setItem("CodeARC_chats", JSON.stringify(updatedChats));
+        localStorage.setItem("CodeARC_currentChatId", newCurrentChatId); // update stored active chat
+        set({ chats: updatedChats, currentChatId: newCurrentChatId });
       }
     },
 
@@ -365,7 +378,7 @@ export const useStore = create<Store>((set, get) => {
         const updatedChats = chats.map((c) =>
           c.id === currentChatId ? updatedChat : c
         );
-        localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+        localStorage.setItem("CodeARC_chats", JSON.stringify(updatedChats));
         set({ chats: updatedChats });
       }
     },
