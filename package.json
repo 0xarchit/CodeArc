@@ -20,7 +20,7 @@
     "@capacitor/keyboard": "^7.0.0",
     "@capacitor/network": "^7.0.0",
     "@capacitor/toast": "^7.0.0",
-    "@google/generative-ai": "^0.24.1",
+    "@google/generative-ai": "^0.2.1",
     "@ionic/react": "^8.5.0",
     "@tailwindcss/typography": "^0.5.10",
     "lucide-react": "^0.344.0",
