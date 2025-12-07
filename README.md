@@ -19,7 +19,7 @@ CodeArc is a programming-focused chatbot designed to explain concepts and help y
 CodeArc is built using cutting-edge technologies to deliver a seamless and efficient experience:
 - **React**: For crafting an interactive and responsive user interface.
 - **TypeScript**: Ensuring type safety and a smoother development process.
-- **@google/generative-ai**: Integrating advanced AI-driven features.
+- **@google/genai**: Integrating advanced AI-driven features.
 - **Capacitor**: Enabling hybrid app development for cross-platform functionality.
 - **Zustand**: Simplifying state management with a lightweight and intuitive approach.
 - **react-loading-indicators**: Adding polished loading visuals for an enhanced user experience.

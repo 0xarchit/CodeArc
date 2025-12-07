@@ -1,23 +1,31 @@
-import { Atom } from 'react-loading-indicators';
-import { ApiKeyInput } from './components/api/ApiKeyInput';
-import { Chat } from './components/chat/Chat';
-import { NetworkStatus } from './components/network/NetworkStatus'; 
-import { useStore } from './store/useStore';
+import { Atom } from "react-loading-indicators";
+import { ApiKeyInput } from "./components/api/ApiKeyInput";
+import { Chat } from "./components/chat/Chat";
+import { NetworkStatus } from "./components/network/NetworkStatus";
+import { useStore } from "./store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 function App() {
-  const { apiKey, userName, isValidatingApiKey, isDarkMode } = useStore(state => ({
-    apiKey: state.apiKey,
-    userName: state.userName,
-    isValidatingApiKey: state.isValidatingApiKey,
-    isDarkMode: state.isDarkMode,
-  }));
+  const { apiKey, userName, isValidatingApiKey, isDarkMode } = useStore(
+    useShallow((state) => ({
+      apiKey: state.apiKey,
+      userName: state.userName,
+      isValidatingApiKey: state.isValidatingApiKey,
+      isDarkMode: state.isDarkMode,
+    }))
+  );
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
       <NetworkStatus>
         {isValidatingApiKey ? (
           <div className="fixed inset-0 flex items-center justify-center w-full h-full bg-black">
-            <Atom color="#ffffff" size="large" text="Loading..." textColor="#ffffff" />
+            <Atom
+              color="#ffffff"
+              size="large"
+              text="Loading..."
+              textColor="#ffffff"
+            />
           </div>
         ) : !apiKey || !userName ? (
           <ApiKeyInput />

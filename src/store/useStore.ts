@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { Message, ChatSession } from "../types";
 
 interface Store {
@@ -28,14 +28,39 @@ interface Store {
   markLastAssistantMessageAsAnimated: () => void;
 }
 
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      console.warn(`Error reading from localStorage key "${key}":`, e);
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn(`Error writing to localStorage key "${key}":`, e);
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.warn(`Error removing from localStorage key "${key}":`, e);
+    }
+  },
+};
+
 const loadInitialState = () => {
-  const storedApiKey = localStorage.getItem("arcGPT_apiKey");
-  const storedUserName = localStorage.getItem("arcGPT_userName");
-  const storedUserGender = localStorage.getItem("arcGPT_userGender") as
+  const storedApiKey = safeLocalStorage.getItem("arcGPT_apiKey");
+  const storedUserName = safeLocalStorage.getItem("arcGPT_userName");
+  const storedUserGender = safeLocalStorage.getItem("arcGPT_userGender") as
     | "male"
     | "female";
-  const storedChats = localStorage.getItem("arcGPT_chats");
-  const storedDarkMode = localStorage.getItem("arcGPT_darkMode");
+  const storedChats = safeLocalStorage.getItem("arcGPT_chats");
+  const storedDarkMode = safeLocalStorage.getItem("arcGPT_darkMode");
 
   const chats = storedChats
     ? JSON.parse(storedChats).map((chat: any) => ({
@@ -74,11 +99,12 @@ const loadInitialState = () => {
 
 const validateApiKey = async (apiKey: string): Promise<boolean> => {
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const result = await model.generateContent("Test");
-    await result.response;
-    return true;
+    const genAI = new GoogleGenAI({ apiKey });
+    const result = await genAI.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: "Test",
+    });
+    return !!result.text;
   } catch (error) {
     return false;
   }
@@ -133,7 +159,7 @@ export const useStore = create<Store>((set, get) => {
       const isValid = await validateApiKey(key);
 
       if (isValid) {
-        localStorage.setItem("arcGPT_apiKey", key);
+        safeLocalStorage.setItem("arcGPT_apiKey", key);
         set({ apiKey: key, isValidatingApiKey: false, error: null });
         return true;
       } else {
@@ -146,12 +172,12 @@ export const useStore = create<Store>((set, get) => {
     },
 
     setUserName: (name: string) => {
-      localStorage.setItem("arcGPT_userName", name);
+      safeLocalStorage.setItem("arcGPT_userName", name);
       set({ userName: name });
     },
 
     setUserGender: (gender: "male" | "female") => {
-      localStorage.setItem("arcGPT_userGender", gender);
+      safeLocalStorage.setItem("arcGPT_userGender", gender);
       set({ userGender: gender });
     },
 
@@ -172,30 +198,28 @@ export const useStore = create<Store>((set, get) => {
       const updatedChats = chats.map((chat) =>
         chat.id === currentChatId ? updatedChat : chat
       );
-      localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+      safeLocalStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
       set({ chats: updatedChats });
 
       try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const genAI = new GoogleGenAI({ apiKey });
 
-        const chat = model.startChat({
+        const chat = genAI.chats.create({
+          model: "gemini-flash-latest",
           history: newMessages.map((m) => ({
-            role: m.role as "user" | "assistant",
-            parts: m.content,
+            role: m.role === "user" ? "user" : "model",
+            parts: [{ text: m.content }],
           })),
-          generationConfig: {
-            maxOutputTokens: 10000, // Increased from 4096 to allow for longer responses
+          config: {
+            maxOutputTokens: 10000,
           },
         });
 
-        // Always send the system prompt with each message to ensure it's applied
         const systemPromptText = getSystemPrompt(userName, userGender);
-        const result = await chat.sendMessage(
-          `${systemPromptText}\n\nUser: ${message}`
-        );
-        const response = await result.response;
-        const text = response.text();
+        const result = await chat.sendMessage({
+          message: `${systemPromptText}\n\nUser: ${message}`,
+        });
+        const text = result.text;
 
         const assistantMessageId = `msg-${newMessages.length}-${Date.now()}`;
         const updatedMessages = [
@@ -218,7 +242,7 @@ export const useStore = create<Store>((set, get) => {
         const finalChats = chats.map((chat) =>
           chat.id === currentChatId ? finalChat : chat
         );
-        localStorage.setItem("arcGPT_chats", JSON.stringify(finalChats));
+        safeLocalStorage.setItem("arcGPT_chats", JSON.stringify(finalChats));
         set({
           chats: finalChats,
           isLoading: false,
@@ -244,7 +268,7 @@ export const useStore = create<Store>((set, get) => {
       const updatedChats = chats.map((chat) =>
         chat.id === currentChatId ? { ...chat, messages } : chat
       );
-      localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+      safeLocalStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
       set({ chats: updatedChats });
     },
 
@@ -253,17 +277,20 @@ export const useStore = create<Store>((set, get) => {
     toggleDarkMode: () => {
       set((state) => {
         const newDarkMode = !state.isDarkMode;
-        localStorage.setItem("arcGPT_darkMode", JSON.stringify(newDarkMode));
+        safeLocalStorage.setItem(
+          "arcGPT_darkMode",
+          JSON.stringify(newDarkMode)
+        );
         return { isDarkMode: newDarkMode };
       });
     },
 
     clearAllData: () => {
-      localStorage.removeItem("arcGPT_apiKey");
-      localStorage.removeItem("arcGPT_userName");
-      localStorage.removeItem("arcGPT_userGender");
-      localStorage.removeItem("arcGPT_chats");
-      localStorage.removeItem("arcGPT_darkMode");
+      safeLocalStorage.removeItem("arcGPT_apiKey");
+      safeLocalStorage.removeItem("arcGPT_userName");
+      safeLocalStorage.removeItem("arcGPT_userGender");
+      safeLocalStorage.removeItem("arcGPT_chats");
+      safeLocalStorage.removeItem("arcGPT_darkMode");
       set({
         apiKey: null,
         userName: null,
@@ -283,7 +310,7 @@ export const useStore = create<Store>((set, get) => {
 
     clearChatHistory: () => {
       const { currentChatId } = get();
-      localStorage.removeItem("arcGPT_chats");
+      safeLocalStorage.removeItem("arcGPT_chats");
       set({
         chats: [
           {
@@ -305,7 +332,7 @@ export const useStore = create<Store>((set, get) => {
       const updatedChats = chats.map((chat) =>
         chat.id === currentChatId ? { ...chat, messages: newMessages } : chat
       );
-      localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+      safeLocalStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
       set({ chats: updatedChats });
     },
 
@@ -319,7 +346,7 @@ export const useStore = create<Store>((set, get) => {
       };
       const { chats } = get();
       const updatedChats = [...chats, newChat];
-      localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+      safeLocalStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
       set({ chats: updatedChats, currentChatId: newChatId });
     },
 
@@ -338,10 +365,10 @@ export const useStore = create<Store>((set, get) => {
           messages: [],
           createdAt: Date.now(),
         });
-        localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+        safeLocalStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
         set({ chats: updatedChats, currentChatId: newChatId });
       } else {
-        localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+        safeLocalStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
         set({
           chats: updatedChats,
           currentChatId:
@@ -365,7 +392,7 @@ export const useStore = create<Store>((set, get) => {
         const updatedChats = chats.map((c) =>
           c.id === currentChatId ? updatedChat : c
         );
-        localStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
+        safeLocalStorage.setItem("arcGPT_chats", JSON.stringify(updatedChats));
         set({ chats: updatedChats });
       }
     },

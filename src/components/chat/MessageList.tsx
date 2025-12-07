@@ -1,45 +1,46 @@
-import { useState, useEffect, useRef, RefObject } from 'react';
-import { ChatMessage } from './ChatMessage';
-import { Message } from '../../types';
-import { useStore } from '../../store/useStore';
-import { AlertCircle } from 'lucide-react';
+import { useState, useEffect, useRef, RefObject } from "react";
+import { ChatMessage } from "./ChatMessage";
+import { Message } from "../../types";
+import { useStore } from "../../store/useStore";
+import { AlertCircle } from "lucide-react";
 
 interface MessageListProps {
   messages: Message[];
   isDarkMode: boolean;
   userName: string | null;
-  userGender: 'male' | 'female';
+  userGender: "male" | "female";
   messagesEndRef: RefObject<HTMLDivElement>;
   isTyping: boolean;
   setIsTyping: (typing: boolean) => void;
 }
 
-export function MessageList({ 
-  messages, 
-  isDarkMode, 
-  userName, 
+export function MessageList({
+  messages,
+  isDarkMode,
+  userName,
   userGender,
-  messagesEndRef, 
-  isTyping, 
-  setIsTyping 
+  messagesEndRef,
+  isTyping,
+  setIsTyping,
 }: MessageListProps) {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
-  const [displayedResponse, setDisplayedResponse] = useState('');
-  const [lastAnimatedMessageId, setLastAnimatedMessageId] = useState<string | null>(null);
+  const [displayedResponse, setDisplayedResponse] = useState("");
+  const [lastAnimatedMessageId, setLastAnimatedMessageId] = useState<
+    string | null
+  >(null);
   const [userHasScrolled, setUserHasScrolled] = useState(false);
 
-  const { isLoading, error, clearError, setMessages, deleteMessage } = useStore();
+  const { isLoading, error, clearError, setMessages, deleteMessage } =
+    useStore();
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Track current isTyping value
   const isTypingRef = useRef(isTyping);
   useEffect(() => {
     isTypingRef.current = isTyping;
   }, [isTyping]);
 
-  // Track user's scroll activity
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -50,13 +51,13 @@ export function MessageList({
       setUserHasScrolled(!isAtBottom);
     };
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
     if (messages.length === 0) {
-      setDisplayedResponse('');
+      setDisplayedResponse("");
       setIsTyping(false);
       setLastAnimatedMessageId(null);
       setUserHasScrolled(false);
@@ -65,27 +66,29 @@ export function MessageList({
 
     const lastMessage = messages[messages.length - 1];
     if (
-      lastMessage.role === 'assistant' &&
+      lastMessage.role === "assistant" &&
       !lastMessage.animated &&
       lastAnimatedMessageId !== lastMessage.id &&
       !isTyping
     ) {
       setIsTyping(true);
-      // Reset user scroll state when a new message arrives
+
       setUserHasScrolled(false);
-      
-      let currentText = '';
+
+      let currentText = "";
       const fullContent = lastMessage.content;
-      
+
       const contentLength = fullContent.length;
       const baseSpeed = 4;
-      const typingSpeed = Math.max(1, Math.min(6, baseSpeed * (1 + contentLength / 15000)));
-      
+      const typingSpeed = Math.max(
+        1,
+        Math.min(6, baseSpeed * (1 + contentLength / 15000))
+      );
+
       let currentIndex = 0;
       let lastScrollTime = Date.now();
 
       const typeChunk = () => {
-        // Check for manual stop (via stop button)
         if (!isTypingRef.current) {
           setDisplayedResponse(fullContent);
           setLastAnimatedMessageId(lastMessage.id);
@@ -93,60 +96,66 @@ export function MessageList({
             msg.id === lastMessage.id ? { ...msg, animated: true } : msg
           );
           setMessages(updatedMessages);
-          setIsTyping(false); // Ensure stop button reverts to send button
+          setIsTyping(false);
           return;
         }
 
         if (currentIndex < fullContent.length) {
           let chunkSize = Math.max(1, Math.round(typingSpeed));
           const remainingText = fullContent.substring(currentIndex);
-          
-          if (remainingText.startsWith('```') || 
-              remainingText.startsWith('|') || 
-              remainingText.includes('```') ||
-              remainingText.includes('| --- |')) {
+
+          if (
+            remainingText.startsWith("```") ||
+            remainingText.startsWith("|") ||
+            remainingText.includes("```") ||
+            remainingText.includes("| --- |")
+          ) {
             chunkSize = Math.max(3, chunkSize * 1.5);
           }
-          
+
           chunkSize = Math.min(chunkSize, fullContent.length - currentIndex);
-          
-          const nextChunk = fullContent.substring(currentIndex, currentIndex + chunkSize);
+
+          const nextChunk = fullContent.substring(
+            currentIndex,
+            currentIndex + chunkSize
+          );
           currentText += nextChunk;
           currentIndex += chunkSize;
-          
+
           setDisplayedResponse(currentText);
-          
+
           let delay = 20;
           const lastChar = currentText.charAt(currentText.length - 1);
-          if (['.', '!', '?'].includes(lastChar)) {
+          if ([".", "!", "?"].includes(lastChar)) {
             delay = 35;
-          } else if ([',', ';', ':'].includes(lastChar)) {
+          } else if ([",", ";", ":"].includes(lastChar)) {
             delay = 25;
-          } else if (lastChar === '\n') {
+          } else if (lastChar === "\n") {
             delay = 30;
           }
-          
-          // Remove auto-scrolling during typing to allow free scrolling
-          // Only auto scroll at the very beginning when message first appears
+
           const currentTime = Date.now();
-          if (currentTime - lastScrollTime > 250 && messagesEndRef.current && !userHasScrolled && currentIndex < chunkSize * 2) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+          if (
+            currentTime - lastScrollTime > 250 &&
+            messagesEndRef.current &&
+            !userHasScrolled &&
+            currentIndex < chunkSize * 2
+          ) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
             lastScrollTime = currentTime;
           }
-          
+
           typingTimeoutRef.current = setTimeout(typeChunk, delay);
         } else {
-          // Type complete: ensure stop button reverts to send button
           setIsTyping(false);
           setLastAnimatedMessageId(lastMessage.id);
           const updatedMessages = messages.map((msg) =>
             msg.id === lastMessage.id ? { ...msg, animated: true } : msg
           );
           setMessages(updatedMessages);
-          
-          // Scroll to bottom only once at completion if user hasn't manually scrolled
+
           if (messagesEndRef.current && !userHasScrolled) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
           }
         }
       };
@@ -159,14 +168,18 @@ export function MessageList({
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       };
     } else {
-      setDisplayedResponse(lastMessage?.content || '');
+      setDisplayedResponse(lastMessage?.content || "");
     }
   }, [messages, setMessages, setIsTyping, messagesEndRef]);
 
-  // Scroll to bottom only when a new message is added or when typing is completed
   useEffect(() => {
-    if (messages.length > 0 && !isTyping && messagesEndRef.current && !userHasScrolled) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (
+      messages.length > 0 &&
+      !isTyping &&
+      messagesEndRef.current &&
+      !userHasScrolled
+    ) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages.length, isTyping, messagesEndRef, userHasScrolled]);
 
@@ -180,11 +193,11 @@ export function MessageList({
     setTimeout(() => setCopiedMessage(null), 2000);
   };
 
-  const getFirstName = (name: string) => name.split(' ')[0];
-  const siblingTerm = userGender === 'male' ? 'Bhai' : 'Bahen';
+  const getFirstName = (name: string) => name.split(" ")[0];
+  const siblingTerm = userGender === "male" ? "Bhai" : "Bahen";
 
   return (
-    <div 
+    <div
       className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent"
       ref={scrollContainerRef}
     >
@@ -192,9 +205,14 @@ export function MessageList({
         {messages.length === 0 ? (
           <div className="text-center mt-8">
             <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-400">
-              Namaste {userName 
-                ? `${getFirstName(userName).charAt(0).toUpperCase() + getFirstName(userName).slice(1).toLowerCase()} ${userGender === 'male' ? 'Bhai' : 'Bahen'}` 
-                : siblingTerm}! 🙏
+              Namaste{" "}
+              {userName
+                ? `${
+                    getFirstName(userName).charAt(0).toUpperCase() +
+                    getFirstName(userName).slice(1).toLowerCase()
+                  } ${userGender === "male" ? "Bhai" : "Bahen"}`
+                : siblingTerm}
+              ! 🙏
             </h2>
             <p className="text-gray-900 dark:text-gray-400">
               Koi bhi programming question pucho, main help kar dunga!
@@ -221,16 +239,24 @@ export function MessageList({
         )}
         {isLoading && (
           <div className="flex justify-start p-4">
-            <div className={`max-w-[90%] md:max-w-[70%] rounded-2xl p-4 ${
-              isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-800 shadow-md'
-            }`}>
+            <div
+              className={`max-w-[90%] md:max-w-[70%] rounded-2xl p-4 ${
+                isDarkMode
+                  ? "bg-gray-800 text-gray-100"
+                  : "bg-white text-gray-800 shadow-md"
+              }`}
+            >
               <div className="flex items-center space-x-3">
                 <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-0" />
-                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-150" />
-                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-300" />
-                  </div>
-                <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Thinking...</span>
+                  <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-0" />
+                  <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-150" />
+                  <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce delay-300" />
+                </div>
+                <span
+                  className={isDarkMode ? "text-gray-300" : "text-gray-600"}
+                >
+                  Thinking...
+                </span>
               </div>
             </div>
           </div>
@@ -240,7 +266,12 @@ export function MessageList({
             <div className="flex items-center gap-2 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 max-w-[90%] md:max-w-[70%]">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <p className="flex-1">{error}</p>
-              <button onClick={clearError} className="ml-auto text-sm underline hover:no-underline">Dismiss</button>
+              <button
+                onClick={clearError}
+                className="ml-auto text-sm underline hover:no-underline"
+              >
+                Dismiss
+              </button>
             </div>
           </div>
         )}

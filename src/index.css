@@ -1,6 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #4f46e5;
+  --color-secondary: #ec4899;
+}
+
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 * {
   user-select: none;
@@ -14,7 +20,6 @@
   scrollbar-color: grey transparent;
 }
 
-/* Custom scrollbar styles */
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
@@ -35,7 +40,6 @@
   }
 }
 
-/* Base layout */
 html,
 body {
   height: 100%;
